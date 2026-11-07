@@ -1,4 +1,4 @@
-# Smok'house : app client + app admin
+# Smok'house : app client + app admin 
 
 > 🛒 **Nouveau : boutique en ligne (livraison locale + expédition France).** Pour la mise en ligne, suis **`GUIDE-BOUTIQUE.md`** : GitHub + Netlify, variables, Brevo, puis verrouillage.
 
