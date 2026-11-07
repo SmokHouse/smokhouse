@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Smok'house Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0A0C07">
+<link rel="manifest" href="/admin/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icons/admin-192.png">
+<link rel="apple-touch-icon" href="/icons/admin-apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SH Admin">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#0A0C07; --bg-alt:#14170D; --surface:#1A2012; --surface-2:#232B18;
+    --fg:#F3EFDF; --fg-soft:#A8A38B; --moss:#8FE24C; --moss-deep:#5B9A2E; --clay:#F0A94E; --red:#F26B5B;
+    --line:rgba(243,239,223,0.14); --line-strong:rgba(243,239,223,0.26); --ink:#161B0F;
+    --safe-top:env(safe-area-inset-top); --safe-bot:env(safe-area-inset-bottom);
+  }
+  *{margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--bg); color:var(--fg); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.45;}
+  body{min-height:100vh; overscroll-behavior-y:contain;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  button{font:inherit; color:inherit; cursor:pointer;}
+  input,select,textarea{font:inherit; color:var(--fg); background:var(--bg); border:1px solid var(--line-strong); border-radius:8px; padding:12px; width:100%;}
+  input:focus,select:focus{outline:2px solid var(--moss); outline-offset:1px;}
+  a{color:inherit;}
+  [hidden]{display:none !important;}
+
+  /* top bar */
+  .top{position:sticky; top:0; z-index:20; background:rgba(10,12,7,.92); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    padding:calc(12px + var(--safe-top)) 16px 12px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line);}
+  .brand{font-family:'Spectral',serif; font-size:20px; font-weight:600;}
+  .brand span{color:var(--moss);}
+  .live{display:flex; align-items:center; gap:7px; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--fg-soft);}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--fg-soft);}
+  .live.on .dot{background:var(--moss); box-shadow:0 0 0 0 rgba(143,226,76,.6); animation:pulse 2s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(143,226,76,.55);}70%{box-shadow:0 0 0 9px rgba(143,226,76,0);}100%{box-shadow:0 0 0 0 rgba(143,226,76,0);}}
+
+  main{padding:16px 16px calc(96px + var(--safe-bot)); max-width:720px; margin:0 auto;}
+  h2{font-family:'Spectral',serif; font-weight:600; font-size:22px; margin:6px 0 12px;}
+  .label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--fg-soft); margin:22px 0 10px; display:flex; align-items:center; gap:8px;}
+  .label .n{background:var(--surface-2); color:var(--fg); border-radius:10px; padding:1px 8px;}
+  .muted{color:var(--fg-soft); font-size:13px;}
+  .empty{color:var(--fg-soft); font-size:14px; padding:18px; border:1px dashed var(--line); border-radius:12px; text-align:center;}
+
+  /* tabs */
+  .tabs{position:fixed; left:0; right:0; bottom:0; z-index:30; display:grid; grid-template-columns:repeat(5,1fr);
+    background:rgba(20,23,13,.96); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-top:1px solid var(--line); padding-bottom:var(--safe-bot);}
+  .tab{background:none; border:0; padding:10px 4px 9px; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--fg-soft); font-size:11px; position:relative;}
+  .tab svg{width:22px; height:22px;}
+  .tab.active{color:var(--moss);}
+  .badge{position:absolute; top:5px; left:calc(50% + 6px); background:var(--clay); color:var(--ink); font-size:10px; font-weight:600; border-radius:9px; min-width:17px; height:17px; padding:0 5px; display:flex; align-items:center; justify-content:center;}
+
+  /* cards */
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px;}
+  .card.new{border-color:var(--moss); box-shadow:0 0 0 1px var(--moss) inset;}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .o-name{font-weight:600; font-size:16px;}
+  .o-time{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--fg-soft);}
+  .o-items{margin:10px 0 4px; font-size:14px;}
+  .o-items li{list-style:none; display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px dashed var(--line);}
+  .o-items li:last-child{border-bottom:0;}
+  .o-total{font-family:'IBM Plex Mono',monospace; font-size:15px; color:var(--moss); text-align:right; margin-top:6px;}
+  .o-notes{font-size:13px; color:var(--fg-soft); margin-top:6px;}
+  .pill{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; padding:3px 8px; border-radius:20px; background:var(--surface-2); color:var(--fg-soft);}
+  .pill.wait{background:rgba(240,169,78,.18); color:var(--clay);}
+  .pill.go{background:rgba(143,226,76,.16); color:var(--moss);}
+  .pill.low{background:rgba(242,107,91,.16); color:var(--red);}
+  .actions{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .btn{border:1px solid var(--line-strong); background:var(--surface-2); border-radius:10px; padding:11px 14px; font-size:14px; font-weight:500; display:inline-flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; min-height:44px;}
+  .btn.primary{background:var(--moss); color:var(--ink); border-color:var(--moss);}
+  .btn.ghost{background:none;}
+  .btn.danger{color:var(--red); border-color:rgba(242,107,91,.4); background:none;}
+  .btn.grow{flex:1;}
+  .btn svg{width:18px; height:18px;}
+  .btn:disabled{opacity:.5;}
+
+  /* stats */
+  .kpis{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .kpi{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px;}
+  .kpi .v{font-family:'Spectral',serif; font-size:26px; font-weight:600; margin-top:4px;}
+  .kpi .v.moss{color:var(--moss);}
+  .seg{display:flex; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:3px; margin-bottom:14px;}
+  .seg button{flex:1; background:none; border:0; padding:9px 4px; border-radius:8px; font-size:13px; color:var(--fg-soft);}
+  .seg button.active{background:var(--surface-2); color:var(--fg);}
+  .seg button .n{font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--surface-2); border-radius:10px; padding:1px 7px; margin-left:4px;}
+  .seg button.active .n{background:var(--moss); color:#0E1207;}
+  .mode-badge{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-soft);}
+  .pill.ship{background:rgba(110,160,240,.16); color:#8db4f0;}
+  .warn-box{background:rgba(240,169,78,.12); border:1px solid rgba(240,169,78,.35); color:var(--clay); border-radius:10px; padding:10px 12px; font-size:13px; margin-top:8px;}
+  .bar-row{display:grid; grid-template-columns:110px 1fr auto; align-items:center; gap:10px; padding:7px 0; font-size:13px;}
+  .bar{height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
+  .bar i{display:block; height:100%; background:var(--moss); border-radius:4px;}
+  .bar.warn i{background:var(--clay);}
+  .bar.bad i{background:var(--red);}
+
+  .month-nav{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:-4px 0 14px;}
+  .month-nav b{font-family:'Spectral',serif; font-size:18px; text-transform:capitalize;}
+  .month-nav .btn{min-width:48px; font-size:20px; padding:6px 12px;}
+  .iv-line{display:grid; grid-template-columns:1fr 64px 72px 40px; gap:6px; margin-bottom:8px;}
+  .iv-line input{padding:10px 8px;}
+  .iv-line button{background:none; border:1px solid var(--line-strong); border-radius:8px; color:var(--fg-soft); font-size:18px;}
+  .kpi .sub{font-size:11.5px; color:var(--fg-soft); margin-top:4px; line-height:1.35;}
+  .day-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 2px; border:0; border-bottom:1px solid var(--line); background:none; width:100%; text-align:left;}
+  .day-row:last-child{border-bottom:0;}
+  .day-row.zero{opacity:.45;}
+  .day-row .d{font-size:14px; font-weight:500; text-transform:capitalize;}
+  .day-row .n{font-size:12px; color:var(--fg-soft);}
+  .day-row .amt{font-family:'IBM Plex Mono',monospace; text-align:right; font-size:14px;}
+  .day-row .amt small{display:block; font-size:11px; color:var(--fg-soft);}
+  .entry{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 0; border-bottom:1px dashed var(--line);}
+  .entry:last-child{border-bottom:0;}
+  .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.06em; padding:2px 7px; border-radius:10px; background:var(--surface-2); color:var(--fg-soft); margin-right:6px;}
+  .tag.site{background:rgba(143,226,76,.16); color:var(--moss);}
+  .warn-card{border-color:rgba(240,169,78,.45); background:rgba(240,169,78,.08);}
+  .line-row{display:grid; grid-template-columns:1fr 90px 44px; gap:8px; margin-bottom:8px;}
+  .line-row button{background:none; border:1px solid var(--line-strong); border-radius:8px; color:var(--fg-soft); font-size:18px;}
+  .line-row.gift select, .line-row.gift input{border-color:var(--moss);}
+  .line-row.gift{position:relative;}
+  .line-row.gift::before{content:'🎁'; position:absolute; left:-2px; top:-8px; font-size:12px;}
+  .check{display:flex; align-items:center; gap:10px; font-size:14px; margin-bottom:12px;}
+  .check input{width:20px; height:20px; accent-color:var(--moss);}
+  .cost-row{display:grid; grid-template-columns:1fr 110px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line);}
+
+  /* stock */
+  .st-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
+  .st-qty{font-family:'Spectral',serif; font-size:24px; font-weight:600;}
+  .st-meta{display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--fg-soft); margin-top:6px;}
+  .st-meta b{color:var(--fg); font-weight:500;}
+  .card.off{opacity:.55;}
+
+  /* sheet */
+  .sheet-bg{position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50; opacity:0; pointer-events:none; transition:opacity .2s;}
+  .sheet-bg.open{opacity:1; pointer-events:auto;}
+  .sheet{position:fixed; left:0; right:0; bottom:0; z-index:60; background:var(--bg-alt); border-top:1px solid var(--line-strong); border-radius:18px 18px 0 0;
+    padding:10px 16px calc(20px + var(--safe-bot)); transform:translateY(105%); transition:transform .25s ease; max-height:88vh; overflow:auto; max-width:720px; margin:0 auto;}
+  .sheet.open{transform:translateY(0);}
+  .grab{width:40px; height:4px; border-radius:2px; background:var(--line-strong); margin:0 auto 12px;}
+  .sheet h3{font-family:'Spectral',serif; font-size:20px; margin-bottom:12px;}
+  .field{display:flex; flex-direction:column; gap:6px; margin-bottom:12px;}
+  .field label{font-size:12px; color:var(--fg-soft);}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;}
+  .chip{background:var(--surface-2); border:1px solid var(--line); border-radius:20px; padding:9px 14px; font-size:14px;}
+  .chip.on{background:var(--moss); color:var(--ink); border-color:var(--moss);}
+
+  /* login */
+  .login{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .login-box{width:100%; max-width:360px; text-align:center;}
+  .login-box img{width:72px; height:72px; border-radius:16px; margin-bottom:14px;}
+  .login-box form{display:flex; flex-direction:column; gap:10px; margin-top:20px; text-align:left;}
+  .msg{font-size:13px; color:var(--clay); min-height:18px; text-align:center;}
+
+  .toast{position:fixed; left:50%; top:calc(12px + var(--safe-top)); transform:translate(-50%,-150%); z-index:80; background:var(--moss); color:var(--ink);
+    padding:12px 18px; border-radius:10px; font-weight:500; box-shadow:0 10px 30px rgba(0,0,0,.5); transition:transform .3s; max-width:calc(100% - 24px); text-align:center;}
+  .toast.show{transform:translate(-50%,0);}
+  .toast.err{background:var(--red);}
+  .search{margin-bottom:12px;}
+  .client{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 0; border-bottom:1px solid var(--line);}
+  .client:last-child{border-bottom:0;}
+  #qr-reader{border-radius:12px; overflow:hidden; margin-bottom:12px;}
+  .mv{display:flex; justify-content:space-between; font-size:13px; padding:7px 0; border-bottom:1px dashed var(--line);}
+  .mv .plus{color:var(--moss);} .mv .minus{color:var(--clay);}
+
+  .pw-wrap{position:relative; display:block;}
+  .pw-wrap input{padding-right:48px !important; width:100%;}
+  .pw-toggle{position:absolute; right:4px; top:50%; transform:translateY(-50%); width:40px; height:40px; background:none; border:0; color:var(--fg-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;}
+  .pw-toggle svg{width:20px; height:20px;}
+  .pw-toggle .eye-off{display:none;}
+  .pw-toggle.on .eye-on{display:none;}
+  .pw-toggle.on .eye-off{display:block;}
+</style>
+</head>
+<body>
+
+<!-- ============ CONNEXION ============ -->
+<section class="login" id="view-login" hidden>
+  <div class="login-box">
+    <img src="/icons/admin-192.png" alt="">
+    <div class="brand">Smok<span>'</span>house <span class="mono" style="font-size:13px; color:var(--fg-soft);">admin</span></div>
+    <form id="login-form">
+      <input id="lg-email" type="email" autocomplete="username" placeholder="Email" required>
+      <span class="pw-wrap"><input id="lg-pass" type="password" autocomplete="current-password" placeholder="Mot de passe" required><button type="button" class="pw-toggle" data-for="lg-pass" aria-label="Afficher le mot de passe"><svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button></span>
+      <button class="btn primary" type="submit">Se connecter</button>
+      <div class="msg" id="lg-msg"></div>
+    </form>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div id="view-app" hidden>
+  <header class="top">
+    <div class="brand">Smok<span>'</span>house</div>
+    <div class="live" id="live"><span class="dot"></span><span id="live-txt">Hors ligne</span></div>
+  </header>
+
+  <main>
+    <!-- COMMANDES -->
+    <section data-view="orders">
+      <div class="row"><h2>Commandes</h2><button class="btn ghost" id="enable-alerts" hidden>🔔 Activer les alertes</button></div>
+      <div class="seg" id="omode"><button class="active" data-m="local">🚲 Livraisons locales<span class="n" id="n-local">0</span></button><button data-m="france">📦 Expéditions France<span class="n" id="n-france">0</span></button></div>
+      <div id="orders-local">
+        <div class="label">À valider <span class="n" id="n-wait">0</span></div>
+        <div id="list-wait"></div>
+        <div class="label">Confirmées <span class="n" id="n-conf">0</span></div>
+        <div id="list-conf"></div>
+        <div class="label">En livraison <span class="n" id="n-go">0</span></div>
+        <div id="list-go"></div>
+        <div class="label">Livrées aujourd'hui <span class="n" id="n-done">0</span></div>
+        <div id="list-done"></div>
+      </div>
+      <div id="orders-france" hidden>
+        <div class="row" style="margin-bottom:4px;"><span class="muted" id="fr-state">Expédition : …</span><button class="btn ghost" id="exp-settings">⚙️ Réglages</button></div>
+        <div class="label">En attente de paiement <span class="n" id="n-fpay">0</span></div>
+        <div id="list-fpay"></div>
+        <div class="label">Payées — à préparer <span class="n" id="n-fpaid">0</span></div>
+        <div id="list-fpaid"></div>
+        <div class="label">En préparation <span class="n" id="n-fprep">0</span></div>
+        <div id="list-fprep"></div>
+        <div class="label">Expédiées <span class="n" id="n-fship">0</span></div>
+        <div id="list-fship"></div>
+        <div class="label">Livrées (30 derniers jours) <span class="n" id="n-fdone">0</span></div>
+        <div id="list-fdone"></div>
+      </div>
+    </section>
+
+    <!-- STOCK -->
+    <section data-view="stock" hidden>
+      <div class="row"><h2>Stock</h2><div class="row" style="gap:8px;"><button class="btn ghost" id="edit-sheets">📋 Fiches</button><button class="btn ghost" id="edit-menu">🗒 Menu</button><button class="btn primary" id="add-variety">+ Variété</button></div></div>
+      <p class="muted" id="stock-value" style="margin:-4px 0 10px;"></p>
+      <div id="stock-list"></div>
+      <div class="label">Derniers mouvements</div>
+      <div class="card" id="moves"></div>
+    </section>
+
+    <!-- CLIENTS -->
+    <section data-view="clients" hidden>
+      <div class="row"><h2>Fidélité</h2><button class="btn primary" id="scan-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>Scanner</button></div>
+      <input class="search" id="client-search" type="search" placeholder="Rechercher un client ou un n° SH-…">
+      <div class="actions" style="margin:0 0 12px;"><button class="btn primary grow" id="add-client">+ Client</button><button class="btn ghost grow" id="fid-rules">⚙️ Règles</button></div>
+      <div class="card" id="client-list"></div>
+    </section>
+
+    <!-- STATS -->
+    <section data-view="stats" hidden>
+      <div class="row"><h2>Chiffres</h2><button class="btn primary" id="add-sale-btn">+ Vente</button></div>
+      <div class="seg" id="period">
+        <button data-p="day" class="active">Aujourd'hui</button><button data-p="week">7 j</button><button data-p="month">30 j</button><button data-p="quarter">90 j</button><button data-p="mo">Mois</button>
+      </div>
+      <div class="month-nav" id="month-nav" hidden><button class="btn ghost" id="m-prev" aria-label="Mois précédent">‹</button><b id="m-label"></b><button class="btn ghost" id="m-next" aria-label="Mois suivant">›</button></div>
+      <div class="kpis">
+        <div class="kpi"><div class="muted">Chiffre d'affaires</div><div class="v moss" id="k-ca">—</div><div class="sub" id="k-ca-sub"></div></div>
+        <div class="kpi"><div class="muted">Coût d'achat</div><div class="v" id="k-cost">—</div><div class="sub" id="k-cost-sub"></div></div>
+        <div class="kpi"><div class="muted">Marge</div><div class="v" id="k-marge">—</div><div class="sub" id="k-marge-sub"></div></div>
+        <div class="kpi"><div class="muted">Ventes</div><div class="v" id="k-nb">—</div><div class="sub" id="k-nb-sub"></div></div>
+        <div class="kpi"><div class="muted">Panier moyen</div><div class="v" id="k-avg">—</div></div>
+        <div class="kpi"><div class="muted">Moyenne / jour</div><div class="v moss" id="k-avgday">—</div><div class="sub" id="k-avgday-sub"></div></div>
+        <div class="kpi"><div class="muted">Estimation / mois</div><div class="v" id="k-month">—</div><div class="sub" id="k-month-sub"></div></div>
+        <div class="kpi"><div class="muted">Bénéfice net <span id="k-net-rate"></span></div><div class="v moss" id="k-net">—</div><div class="sub" id="k-net-sub"></div></div>
+      </div>
+      <div class="card warn-card" id="cost-warning" hidden style="margin-top:12px;">
+        <div style="font-size:14px; margin-bottom:10px;" id="cost-warning-txt"></div>
+        <button class="btn primary" style="width:100%;" id="open-costs">Renseigner les prix d'achat</button>
+      </div>
+      <div class="label">Jour par jour <span style="text-transform:none; letter-spacing:0;">— touche un jour pour modifier</span></div>
+      <div class="card" id="days-list"></div>
+      <div class="label">Produits vendus (grammes)</div>
+      <div class="card" id="top-products"></div>
+      <div class="label">Réglages</div>
+      <button class="btn ghost" id="open-costs-2" style="width:100%; margin-bottom:10px;">Prix d'achat des produits</button>
+      <button class="btn ghost" id="open-tax" style="width:100%; margin-bottom:10px;">Cotisations et TVA</button>
+      <button class="btn ghost" id="logout" style="width:100%;">Se déconnecter</button>
+    </section>
+    <!-- FACTURES -->
+    <section data-view="factures" hidden>
+      <div class="row"><h2>Factures</h2><button class="btn primary" id="fac-new-sale">+ Vente manuelle</button></div>
+      <div class="card warn-card" id="fac-ent-warn" hidden><div style="font-size:14px; margin-bottom:10px;">Renseigne ton nom légal et ton adresse : ils sont obligatoires sur les factures.</div><button class="btn primary" style="width:100%;" id="fac-ent-warn-btn">Infos entreprise</button></div>
+      <div class="month-nav"><button class="btn ghost" id="fac-m-prev" aria-label="Mois précédent">‹</button><b id="fac-m-label"></b><button class="btn ghost" id="fac-m-next" aria-label="Mois suivant">›</button></div>
+      <div class="label">Livre des recettes</div>
+      <div class="card"><div id="fac-rec-sum" style="margin-bottom:12px;"></div><button class="btn primary" style="width:100%;" id="fac-csv">Exporter le mois (CSV)</button></div>
+      <div class="label">Crédits à encaisser <span class="n" id="fac-credit-n">0</span></div>
+      <div class="card" id="fac-credits"></div>
+      <div class="label">Brouillons <span class="n" id="fac-draft-n">0</span></div>
+      <div class="card" id="fac-drafts"></div>
+      <div class="label">Factures et avoirs du mois</div>
+      <div class="card" id="fac-list"></div>
+      <div class="label">Réglages</div>
+      <button class="btn ghost" id="fac-ent" style="width:100%;">Infos entreprise (en-tête des factures)</button>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="orders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Commandes<span class="badge" id="badge" hidden>0</span></button>
+    <button class="tab" data-tab="stock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>Stock</button>
+    <button class="tab" data-tab="clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h4M15 10h2"/></svg>Fidélité</button>
+    <button class="tab" data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Chiffres</button>
+    <button class="tab" data-tab="factures"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8M9 9h3"/></svg>Factures</button>
+  </nav>
+</div>
+
+<!-- feuille modale -->
+<div class="sheet-bg" id="sheet-bg"></div>
+<div class="sheet" id="sheet"><div class="grab"></div><div id="sheet-body"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   Smok'house Admin — commandes en direct, livraison, stock, fidélité, chiffres
+   ===================================================================== */
+const SUPABASE_URL = 'https://qtagbmjzzmwxiptkgjmn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_UF_VzwObkRhDspRMyzRlRw_ThcJT-zQ';
+
+// Même grille de prix que le site (prix au gramme selon la quantité)
+const PRICE_TIERS = {
+  superlemonhaze:[[1,9],[3,8.5],[5,8],[50,7]], ogkush:[[1,9],[3,8.5],[5,8],[50,7]],
+  piatella:[[1,9],[3,8.5],[5,8],[50,7]], bananadry:[[1,9],[3,8.5],[5,8],[50,7]],
+  caliplate:[[1,10],[25,9]], calibanana:[[1,10],[25,9]], manali:[[1,10],[25,9]], caligazberry:[[1,10],[25,9]]
+};
+const NAMES = { superlemonhaze:'SuperLemon Haze', ogkush:'OG Kush', piatella:'Piatella', bananadry:'Banana Dry', caliplate:'Cali Plate', manali:'Manali', caligazberry:'CaliGaz Berry', calibanana:'Cali Banana', filtree4x50:'4x Filtrée 50%' };
+
+let monthOffset = 0;
+let sb = null, me = null, orders = [], products = [], clients = [], sales = [], period = 'day';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur = (n) => (Math.round(n * 100) / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+const g = (n) => (Math.round(n * 10) / 10).toLocaleString('fr-FR') + ' g';
+
+function pname(pid){ const p = products.find(x => x.id === pid); return p ? p.name : (NAMES[pid] || pid); }
+function rate(pid, grams){
+  const t = PRICE_TIERS[pid];
+  if(!t){ const p = products.find(x => x.id === pid); return p ? Number(p.base_price) || 0 : 0; }
+  let r = t[0][1]; t.forEach(([min, p]) => { if(grams >= min) r = p; }); return r;
+}
+function orderTotal(o){
+  if(o.total != null) return Number(o.total);
+  const m = String(o.items || '').match(/Total\s*:\s*([\d\s.,]+)\s*€/i);
+  return m ? parseFloat(m[1].replace(/\s/g,'').replace(',', '.')) || 0 : 0;
+}
+function orderLines(o){
+  if(Array.isArray(o.lignes_json) && o.lignes_json.length){
+    const off = o.offert_json || {};
+    return o.lignes_json.map(l => ({ pid: l.product_id, name: l.designation, grams: Number(l.grammes), price: Number(l.total) }))
+      .concat(Object.entries(off).map(([pid, g]) => ({ pid, name: pname(pid) + ' (offert)', grams: Number(g), price: 0 })));
+  }
+  if(o.items_json && typeof o.items_json === 'object'){
+    return Object.entries(o.items_json).map(([pid, grams]) => ({ pid, name: pname(pid), grams: Number(grams), price: rate(pid, grams) * grams }));
+  }
+  const txt = String(o.items || '').split('—')[0];
+  return txt.split(',').map(s => s.trim()).filter(Boolean).map(s => ({ name: s, grams: null, price: null }));
+}
+function ago(ts){
+  const m = Math.round((Date.now() - new Date(ts)) / 60000);
+  if(m < 1) return "à l'instant"; if(m < 60) return 'il y a ' + m + ' min';
+  const h = Math.floor(m / 60); if(h < 24) return 'il y a ' + h + ' h';
+  return new Date(ts).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+function toast(text, err){
+  const t = $('toast'); t.textContent = text; t.classList.toggle('err', !!err); t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), err ? 7000 : 3200);
+}
+
+/* ---------- feuille modale ---------- */
+function openSheet(html){ $('sheet-body').innerHTML = html; $('sheet').classList.add('open'); $('sheet-bg').classList.add('open'); }
+function closeSheet(){ $('sheet').classList.remove('open'); $('sheet-bg').classList.remove('open'); stopScan(); }
+$('sheet-bg').addEventListener('click', closeSheet);
+
+/* ---------- onglets ---------- */
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('[data-view]').forEach(s => s.hidden = s.dataset.view !== name);
+  window.scrollTo(0, 0);
+  if(name === 'stock') loadStock();
+  if(name === 'clients') loadClients();
+  if(name === 'stats') renderStats();
+  if(name === 'factures') renderFactures();
+  if(name === 'orders') clearBadge();
+}
+
+/* ---------- alertes nouvelle commande ---------- */
+let audioCtx = null;
+function unlockAudio(){ try{ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if(audioCtx.state === 'suspended') audioCtx.resume(); }catch(e){} }
+document.addEventListener('pointerdown', unlockAudio, { passive: true });
+function ding(){
+  try{
+    unlockAudio(); if(!audioCtx) return;
+    [0, 0.18, 0.36].forEach((t, i) => {
+      const o = audioCtx.createOscillator(), v = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = [880, 1175, 1568][i];
+      v.gain.setValueAtTime(0.0001, audioCtx.currentTime + t);
+      v.gain.exponentialRampToValueAtTime(0.35, audioCtx.currentTime + t + 0.02);
+      v.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + t + 0.28);
+      o.connect(v).connect(audioCtx.destination); o.start(audioCtx.currentTime + t); o.stop(audioCtx.currentTime + t + 0.3);
+    });
+  }catch(e){}
+  try{ navigator.vibrate && navigator.vibrate([200, 100, 200]); }catch(e){}
+}
+let unseen = 0;
+function bumpBadge(){
+  unseen++; $('badge').textContent = unseen; $('badge').hidden = false;
+  try{ navigator.setAppBadge && navigator.setAppBadge(unseen); }catch(e){}
+}
+function clearBadge(){ unseen = 0; $('badge').hidden = true; try{ navigator.clearAppBadge && navigator.clearAppBadge(); }catch(e){} }
+function refreshAlertBtn(){ $('enable-alerts').hidden = !('Notification' in window) || Notification.permission !== 'default'; }
+$('enable-alerts').addEventListener('click', async () => { unlockAudio(); try{ await Notification.requestPermission(); }catch(e){} refreshAlertBtn(); });
+function systemNotify(title, body){
+  try{
+    if(!('Notification' in window) || Notification.permission !== 'granted') return;
+    navigator.serviceWorker.ready.then(reg => reg.showNotification(title, { body, icon:'/icons/admin-192.png', badge:'/icons/admin-192.png', tag:'new-order', renotify:true, vibrate:[200,100,200], data:{ url:'/admin/' } }));
+  }catch(e){}
+}
+
+/* ---------- connexion ---------- */
+async function boot(){
+  if(!window.supabase){ setTimeout(boot, 300); return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session) await enter(session.user); else showLogin();
+}
+function showLogin(msg){ $('view-login').hidden = false; $('view-app').hidden = true; $('lg-msg').textContent = msg || ''; }
+$('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault(); $('lg-msg').textContent = '';
+  const { data, error } = await sb.auth.signInWithPassword({ email: $('lg-email').value.trim(), password: $('lg-pass').value });
+  if(error){ $('lg-msg').textContent = 'Email ou mot de passe incorrect.'; return; }
+  await enter(data.user);
+});
+async function enter(user){
+  const { data, error } = await sb.from('profiles').select('name,is_admin').eq('id', user.id).single();
+  if(error || !data || !data.is_admin){ await sb.auth.signOut(); showLogin("Ce compte n'a pas l'accès admin."); return; }
+  me = { id: user.id, name: data.name };
+  $('view-login').hidden = true; $('view-app').hidden = false;
+  refreshAlertBtn();
+  await loadClientNotes(); await loadSheets(); await loadOrders(); subscribeOrders(); loadStock(true); loadSales(); loadFactures(); loadExpConfig();
+}
+$('logout').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+
+/* ---------- commandes ---------- */
+async function loadOrders(){
+  const since = new Date(Date.now() - 400 * 864e5).toISOString().slice(0, 10);
+  const { data, error } = await sb.from('orders').select('*')
+    .or('status.in.(en_attente,en_cours,confirmee,en_livraison,attente_paiement,payee,preparation,expediee),created_at.gte.' + since)
+    .order('created_at', { ascending: false }).limit(3000);
+  if(error){ toast('Erreur de chargement des commandes', true); console.error(error); return; }
+  orders = data || []; renderOrders();
+}
+function subscribeOrders(){
+  sb.channel('admin-orders')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (p) => {
+      if(p.eventType === 'INSERT'){
+        orders.unshift(p.new); p.new._new = true; renderOrders();
+        const fr = p.new.mode === 'france';
+        ding(); bumpBadge(); toast((fr ? '📦 Nouvelle expédition France : ' : '🚲 Nouvelle livraison locale : ') + (p.new.customer_name || ''));
+        systemNotify(fr ? 'Nouvelle commande 📦 Expédition France' : 'Nouvelle commande 🚲 Livraison locale', (p.new.customer_name || '') + ' — ' + eur(orderTotal(p.new)) + (p.new.address ? ' · ' + p.new.address : ''));
+      } else if(p.eventType === 'UPDATE'){
+        const i = orders.findIndex(o => String(o.id) === String(p.new.id));
+        if(i >= 0) orders[i] = Object.assign(orders[i], p.new); else orders.unshift(p.new);
+        renderOrders();
+      } else if(p.eventType === 'DELETE'){
+        orders = orders.filter(o => String(o.id) !== String(p.old.id)); renderOrders();
+      }
+    })
+    .subscribe((status) => {
+      const on = status === 'SUBSCRIBED';
+      $('live').classList.toggle('on', on); $('live-txt').textContent = on ? 'En direct' : 'Reconnexion…';
+      if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setTimeout(loadOrders, 3000);
+    });
+  // au retour dans l'app, on resynchronise
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) loadOrders(); });
+}
+/* ---------- boutique : appels serveur et statuts ---------- */
+const isFrPaid = (o) => o.mode === 'france' && o.payment_status === 'paid' && o.status !== 'annulee';
+const ERR_FR = { TRANSITION_INTERDITE: 'Ce changement de statut n\'est pas possible', SUIVI_MANQUANT: 'Numéro de suivi obligatoire', NOT_ADMIN: 'Accès admin requis', ORDER_NOT_FOUND: 'Commande introuvable' };
+const errTxt = (m) => { m = String(m || ''); const k = m.split(':')[0]; return ERR_FR[k] ? ERR_FR[k] + (k === 'TRANSITION_INTERDITE' ? ' (' + m.split(':')[1] + ')' : '') : m.slice(0, 140); };
+async function callFn(name, body){
+  const { data:{ session } } = await sb.auth.getSession();
+  const r = await fetch('/.netlify/functions/' + name, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (session && session.access_token) }, body: JSON.stringify(body) });
+  const d = await r.json().catch(() => ({}));
+  if(!r.ok) throw new Error(d.message || d.error || (r.status === 404 ? 'Fonctions Netlify non installées' : 'HTTP ' + r.status));
+  return d;
+}
+async function setStatus(o, statut, info){
+  const { data, error } = await sb.rpc('admin_statut_commande', { p_order: String(o.id), p_statut: statut, p_info: info || {} });
+  if(error){ toast(/admin_statut_commande/.test(error.message || '') ? 'Lance boutique-setup.sql dans Supabase' : 'Erreur : ' + errTxt(error.message), true); return false; }
+  Object.assign(o, data); return true;
+}
+let expCfg = null;
+async function loadExpConfig(){
+  const r = await sb.from('expedition_config').select('*').eq('id', 1).maybeSingle();
+  expCfg = r.data || null;
+  $('fr-state').textContent = !expCfg ? 'Lance boutique-setup.sql' : expCfg.actif ? '✅ Ouverte aux clients' + (expCfg.transporteur ? ' · ' + expCfg.transporteur : '') : '⏸ Fermée aux clients (en attente d\'un transporteur)';
+}
+let sheets = {};
+async function loadSheets(){
+  const r = await sb.from('menu_produits').select('*');
+  if(r.error) return;
+  sheets = Object.fromEntries((r.data || []).map(x => [x.product_id, x]));
+  (r.data || []).forEach(x => { if(Array.isArray(x.prix_paliers) && x.prix_paliers.length) PRICE_TIERS[x.product_id] = x.prix_paliers.map(t => [Number(t[0]), Number(t[1])]).sort((a, b) => a[0] - b[0]); });
+}
+
+/* ---------- carte d'une commande ---------- */
+function orderCard(o){
+  const lines = orderLines(o), fr = o.mode === 'france';
+  const tel = String(o.customer_phone || '').replace(/[^\d+]/g, '');
+  const maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(o.address || '');
+  const st = o.status === 'en_cours' ? 'confirmee' : (o.status || 'en_attente');
+  const PILL = {
+    en_attente: '<span class="pill wait">À valider</span>', confirmee: '<span class="pill go">Confirmée ' + esc(o.delivery_time || '') + '</span>',
+    en_livraison: '<span class="pill go">🚲 En livraison</span>', terminee: '<span class="pill">Livrée</span>', annulee: '<span class="pill">Annulée</span>',
+    attente_paiement: '<span class="pill wait">Attente paiement</span>', payee: '<span class="pill go">Payée</span>', preparation: '<span class="pill go">En préparation</span>', expediee: '<span class="pill ship">Expédiée</span>'
+  };
+  const B = (act, label, cls) => `<button class="btn ${cls || ''}" data-act="${act}" data-id="${esc(o.id)}">${label}</button>`;
+  const go = `<a class="btn" href="${maps}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-6.3 7-12a7 7 0 0 0-14 0c0 5.7 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg>Itinéraire</a>`;
+  const sms = `<a class="btn" href="sms:${tel}?&body=${encodeURIComponent("Salut, c'est Smok'house 🌿 J'arrive dans 5 min !")}">J'arrive</a>`;
+  let actions = '';
+  if(!fr){
+    if(st === 'en_attente') actions = B('validate', 'Confirmer + heure', 'primary grow') + B('cancel', 'Refuser', 'danger');
+    else if(st === 'confirmee') actions = go + B('leave', 'Je pars 🚲', 'grow') + B('done', 'Livrée ✓', 'primary grow') + B('cancel', '✕', 'danger');
+    else if(st === 'en_livraison') actions = go + sms + B('done', 'Livrée ✓', 'primary grow');
+  } else {
+    if(st === 'attente_paiement') actions = B('paid', 'Paiement reçu', 'grow') + B('cancel', 'Annuler', 'danger');
+    else if(st === 'payee') actions = B('prep', 'Préparer', 'grow') + B('ship', '📦 Expédier', 'primary grow') + B('cancel', '✕', 'danger');
+    else if(st === 'preparation') actions = B('ship', '📦 Expédier + n° de suivi', 'primary grow') + B('cancel', '✕', 'danger');
+    else if(st === 'expediee') actions = B('resend', 'Renvoyer le suivi', 'ghost') + B('fdone', 'Livrée ✓', 'primary grow');
+  }
+  const ageH = (Date.now() - new Date(o.created_at)) / 3600e3;
+  const ship = fr ? `<div class="muted" style="margin-top:6px;">${o.shipping_method === 'relais' ? '🏪 Point relais' : '🏠 Domicile'} · port ${Number(o.shipping_cost) > 0 ? eur(Number(o.shipping_cost)) : 'offert'}${o.customer_email ? ' · ✉️ ' + esc(o.customer_email) : ''}</div>
+    ${o.relay_point ? `<div class="muted">Relais : ${esc(o.relay_point.nom)}${o.relay_point.id ? ' (n° ' + esc(o.relay_point.id) + ')' : ''}, ${esc(o.relay_point.adresse)}, ${esc(o.relay_point.cp)} ${esc(o.relay_point.ville)}</div>
+       <div class="muted">Destinataire : ${esc((o.ship_address || {}).nom || '')}</div>` : (o.ship_address ? `<div class="muted">📍 ${esc(o.ship_address.nom)} — ${esc(o.ship_address.ligne1)}${o.ship_address.ligne2 ? ', ' + esc(o.ship_address.ligne2) : ''}, ${esc(o.ship_address.cp)} ${esc(o.ship_address.ville)}</div>` : '')}
+    ${o.tracking_number ? `<div class="o-notes">📦 ${esc(o.carrier || '')} <b class="mono">${esc(o.tracking_number)}</b> ${o.tracking_url ? `<a href="${esc(o.tracking_url)}" target="_blank" rel="noopener" style="color:var(--moss);">suivre</a>` : ''} ${o.tracking_sent_at ? '· ✉️ envoyé' : '· ⚠️ e-mail non envoyé'}</div>` : ''}
+    ${st === 'attente_paiement' && ageH > 24 ? '<div class="warn-box">Plus de 24 h sans paiement : le stock n\'est plus réservé. Tu peux l\'annuler.</div>' : ''}
+    ${o.payment_status === 'failed' && st === 'attente_paiement' ? '<div class="warn-box">Dernière tentative de paiement refusée.</div>' : ''}` : '';
+  return `<div class="card ${o._new ? 'new' : ''}">
+    <div class="row"><div class="o-name">${esc(clientLabel(o.customer_id, o.customer_name))}</div><span class="o-time">${ago(o.created_at)}</span></div>
+    <div class="mode-badge">${fr ? '📦 Expédition France' : '🚲 Livraison locale'} · n° ${esc(o.id)}</div>
+    ${o.customer_id && clientNotes[o.customer_id] && clientNotes[o.customer_id].note ? `<div class="o-notes" style="color:var(--clay);">📝 ${esc(clientNotes[o.customer_id].note)}</div>` : ''}
+    <div class="row" style="margin-top:6px;">${PILL[st] || ''}<a href="tel:${tel}" class="mono" style="font-size:13px; color:var(--moss); text-decoration:none;">${esc(o.customer_phone || '')}</a></div>
+    ${!fr && o.address ? `<div class="muted" style="margin-top:6px;">📍 ${esc(o.address)}</div>` : ''}
+    ${ship}
+    <ul class="o-items">${lines.map(l => `<li><span>${l.grams != null ? l.grams + ' g ' : ''}${esc(l.name)}</span><span class="mono">${l.price != null ? eur(l.price) : ''}</span></li>`).join('')}</ul>
+    <div class="o-total">${eur(orderTotal(o))}</div>
+    ${o.notes ? `<div class="o-notes">${esc(o.notes)}</div>` : ''}
+    ${o.reward_label ? `<div class="o-notes" style="color:var(--moss);">🎁 Récompense à remettre : <b>${esc(o.reward_label)}</b> (-${o.reward_points} pts${o.reward_refunded ? ', rendus' : ''})</div>` : ''}
+    ${o.points_credited && o.points_earned ? `<div class="o-notes">⭐ +${o.points_earned} pts fidélité crédités au client</div>` : (o.customer_id && o.status !== 'annulee' ? '<div class="o-notes">⭐ Client avec compte : points crédités à la livraison</div>' : '')}
+    ${o.facture_erreur ? `<div class="warn-box">Facture automatique non émise : ${esc(o.facture_erreur)}${/ENTREPRISE/.test(o.facture_erreur) ? ' — complète tes infos entreprise (onglet Factures)' : ''}. <button class="btn ghost" data-act="refac" data-id="${esc(o.id)}" style="margin-top:6px;">Réessayer</button></div>` : ''}
+    ${actions ? `<div class="actions">${actions}</div>` : ''}
+    ${(o.status === 'terminee' || isFrPaid(o)) ? (() => { const inv = invoiceFor('commande', o.id); return `<div class="actions"><button class="btn ghost grow" data-act="invoice" data-id="${esc(o.id)}">🧾 ${inv ? 'Facture ' + esc(inv.numero) : draftFor('commande', o.id) ? 'Brouillon de facture' : 'Facture'}</button></div>`; })() : ''}
+  </div>`;
+}
+let orderMode = 'local';
+$('omode').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if(!b) return;
+  orderMode = b.dataset.m; document.querySelectorAll('#omode button').forEach(x => x.classList.toggle('active', x === b));
+  $('orders-local').hidden = orderMode !== 'local'; $('orders-france').hidden = orderMode !== 'france';
+});
+function renderOrders(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const month = Date.now() - 30 * 864e5;
+  const loc = orders.filter(o => o.mode !== 'france'), fra = orders.filter(o => o.mode === 'france');
+  const byAge = (a, b) => new Date(a.created_at) - new Date(b.created_at);
+  const put = (n, list, items, empty) => { $('n-' + n).textContent = items.length; $('list-' + list).innerHTML = items.map(orderCard).join('') || '<div class="empty">' + empty + '</div>'; };
+  const wait = loc.filter(o => o.status === 'en_attente' || !o.status).sort(byAge);
+  const conf = loc.filter(o => o.status === 'confirmee' || o.status === 'en_cours');
+  const go = loc.filter(o => o.status === 'en_livraison');
+  const done = loc.filter(o => o.status === 'terminee' && new Date(o.completed_at || o.created_at) >= today);
+  put('wait', 'wait', wait, 'Aucune commande en attente 👌'); put('conf', 'conf', conf, 'Rien de confirmé.');
+  put('go', 'go', go, 'Rien en livraison.'); put('done', 'done', done, 'Pas encore de livraison aujourd\'hui.');
+  const fpay = fra.filter(o => o.status === 'attente_paiement').sort(byAge), fpaid = fra.filter(o => o.status === 'payee').sort(byAge);
+  const fprep = fra.filter(o => o.status === 'preparation').sort(byAge), fship = fra.filter(o => o.status === 'expediee');
+  const fdone = fra.filter(o => o.status === 'terminee' && new Date(o.completed_at || o.created_at) >= month);
+  put('fpay', 'fpay', fpay, 'Aucun paiement en attente.'); put('fpaid', 'fpaid', fpaid, 'Aucune commande à préparer 👌');
+  put('fprep', 'fprep', fprep, 'Rien en préparation.'); put('fship', 'fship', fship, 'Aucun colis en route.'); put('fdone', 'fdone', fdone, '—');
+  $('n-local').textContent = wait.length + conf.length + go.length;
+  $('n-france').textContent = fpaid.length + fprep.length + fpay.length;
+  if(!$('view-app').hidden && !document.querySelector('[data-view="stats"]').hidden) renderStats();
+}
+document.querySelector('[data-view="orders"]').addEventListener('click', async (e) => {
+  if(e.target.closest('#exp-settings')) return expSettingsSheet();
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const o = orders.find(x => String(x.id) === b.dataset.id); if(!o) return;
+  const a = b.dataset.act;
+  if(a === 'validate') validateSheet(o);
+  if(a === 'done') completeOrder(o, b);
+  if(a === 'cancel') cancelOrder(o);
+  if(a === 'invoice') invoiceForOrder(o);
+  if(a === 'leave'){ if(await setStatus(o, 'en_livraison')){ renderOrders(); toast('En livraison 🚲 — le client est prévenu'); } }
+  if(a === 'prep'){ if(await setStatus(o, 'preparation')){ renderOrders(); toast('En préparation'); } }
+  if(a === 'fdone'){ if(await setStatus(o, 'terminee')){ renderOrders(); toast('Colis livré ✓'); } }
+  if(a === 'ship') shipSheet(o);
+  if(a === 'paid') paidSheet(o);
+  if(a === 'resend'){ b.disabled = true; try{ const d = await callFn('admin-order', { action: 'renvoyer-suivi', id: String(o.id) }); toast(d.ok ? 'E-mail de suivi renvoyé' : 'E-mail non envoyé : ' + (d.email_error || ''), !d.ok); }catch(err){ toast('Erreur : ' + err.message, true); } b.disabled = false; }
+  if(a === 'refac'){ const { error } = await sb.rpc('admin_facture_commande', { p_order: String(o.id) }); if(error){ toast('Erreur : ' + errTxt(error.message), true); return; } o.facture_erreur = null; await loadFactures(); renderOrders(); toast('Facture émise'); }
+});
+
+/* ---------- expédition : n° de suivi ---------- */
+function shipSheet(o){
+  openSheet(`<h3>Expédier — ${esc(o.customer_name || '')}</h3>
+    <p class="muted" style="margin-bottom:12px;">${o.shipping_method === 'relais' ? '🏪 Point relais : ' + esc((o.relay_point || {}).nom || '') : '🏠 Domicile'} · le client reçoit son numéro de suivi par e-mail${o.customer_email ? ' (' + esc(o.customer_email) + ')' : ''}.</p>
+    <div class="field"><label>Transporteur</label><input id="sh-carrier" value="${esc(o.carrier || (expCfg && expCfg.transporteur) || '')}" placeholder="ex : Colissimo"></div>
+    <div class="field"><label>Numéro de suivi</label><input id="sh-track" class="mono" autocapitalize="characters" placeholder="ex : 6A12345678901"></div>
+    <div class="field"><label>Lien de suivi (optionnel)</label><input id="sh-url" placeholder="${expCfg && expCfg.tracking_url_template ? 'automatique : ' + esc(expCfg.tracking_url_template) : 'https://…'}"></div>
+    <p class="muted" style="margin-bottom:12px;">Le stock est retiré au moment de l'expédition.</p>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="sh-ok">Expédier et prévenir le client</button></div>`);
+  $('sh-ok').addEventListener('click', async () => {
+    const tracking_number = $('sh-track').value.trim();
+    if(!tracking_number){ toast('Numéro de suivi obligatoire', true); return; }
+    $('sh-ok').disabled = true;
+    try{
+      const d = await callFn('admin-order', { action: 'expedier', id: String(o.id), tracking_number, carrier: $('sh-carrier').value.trim(), tracking_url: $('sh-url').value.trim() });
+      Object.assign(o, d.order); const r = await sb.from('orders').select('*').eq('id', o.id).maybeSingle(); if(r.data) Object.assign(o, r.data);
+      closeSheet(); renderOrders(); loadStock(true);
+      toast(d.email ? 'Expédiée 📦 — e-mail de suivi envoyé' : 'Expédiée, mais e-mail non envoyé (' + (d.email_error || '?') + ')', !d.email);
+    }catch(err){ $('sh-ok').disabled = false; toast('Erreur : ' + errTxt(err.message), true); }
+  });
+}
+function paidSheet(o){
+  openSheet(`<h3>Paiement reçu — ${esc(o.customer_name || '')}</h3>
+    <p class="muted" style="margin-bottom:12px;">${eur(orderTotal(o))} reçus hors paiement en ligne ? La commande passe « Payée », la facture est émise et envoyée au client.</p>
+    <div class="chips" id="pd-m">${[['virement', 'Virement'], ['carte', 'Carte'], ['especes', 'Espèces'], ['autre', 'Autre']].map(([v, l], i) => `<button type="button" class="chip ${i === 0 ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}</div>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="pd-ok">Marquer payée</button></div>`);
+  $('pd-m').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if(c) document.querySelectorAll('#pd-m .chip').forEach(x => x.classList.toggle('on', x === c)); });
+  $('pd-ok').addEventListener('click', async () => {
+    $('pd-ok').disabled = true;
+    try{
+      const d = await callFn('admin-order', { action: 'marquer-payee', id: String(o.id), moyen: document.querySelector('#pd-m .chip.on').dataset.v });
+      if(d.order) Object.assign(o, d.order);
+      closeSheet(); await loadFactures(); renderOrders(); toast('Commande payée ✓ — facture envoyée');
+    }catch(err){ $('pd-ok').disabled = false; toast('Erreur : ' + errTxt(err.message), true); }
+  });
+}
+
+/* ---------- réglages expédition France ---------- */
+function expSettingsSheet(){
+  const c = expCfg || { actif: false, prix_domicile: 5.9, prix_relais: 4.9, seuil_gratuit: 50, domicile_actif: true, relais_actif: true };
+  openSheet(`<h3>Expédition France</h3>
+    <label class="check"><input type="checkbox" id="ex-actif" ${c.actif ? 'checked' : ''}> <b>Ouverte aux clients</b> (n'active qu'une fois ton transporteur validé)</label>
+    <div class="field"><label>Transporteur</label><input id="ex-tr" value="${esc(c.transporteur || '')}" placeholder="ex : Colissimo, Mondial Relay"></div>
+    <div class="line-row" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="field"><label>Domicile €</label><input id="ex-dom" type="number" step="0.01" min="0" inputmode="decimal" value="${Number(c.prix_domicile)}"></div>
+      <div class="field"><label>Relais €</label><input id="ex-rel" type="number" step="0.01" min="0" inputmode="decimal" value="${Number(c.prix_relais)}"></div>
+      <div class="field"><label>Offert dès €</label><input id="ex-seuil" type="number" step="1" min="0" inputmode="decimal" value="${Number(c.seuil_gratuit)}"></div></div>
+    <label class="check"><input type="checkbox" id="ex-domon" ${c.domicile_actif !== false ? 'checked' : ''}> Proposer la livraison à domicile</label>
+    <label class="check"><input type="checkbox" id="ex-relon" ${c.relais_actif !== false ? 'checked' : ''}> Proposer le point relais</label>
+    <div class="field"><label>Lien de suivi ({suivi} = numéro)</label><input id="ex-url" value="${esc(c.tracking_url_template || '')}" placeholder="https://www.laposte.fr/outils/suivre-vos-envois?code={suivi}"></div>
+    <div class="field"><label>Page « trouver un point relais » (optionnel)</label><input id="ex-relurl" value="${esc(c.relais_recherche_url || '')}" placeholder="https://…"></div>
+    <div class="field"><label>Délai affiché</label><input id="ex-delai" value="${esc(c.delai || '48 à 72 h ouvrées après paiement')}"></div>
+    <p class="muted" style="margin-bottom:12px;">Ces tarifs sont ceux appliqués par le serveur au moment de la commande (« 0 » dans « Offert dès » = jamais offert).</p>
+    <div class="actions"><button class="btn ghost" id="ex-test">✉️ Tester l'e-mail</button><button class="btn primary grow" id="ex-ok">Enregistrer</button></div>`);
+  $('ex-test').addEventListener('click', async () => { try{ const d = await callFn('admin-order', { action: 'test-email' }); toast(d.ok ? 'E-mail test envoyé à ton adresse ✓' : 'Échec : ' + (d.email_error || '?'), !d.ok); }catch(err){ toast('Erreur : ' + err.message, true); } });
+  $('ex-ok').addEventListener('click', async () => {
+    const n = (id) => Math.max(0, num($(id).value) || 0);
+    const row = { id: 1, actif: $('ex-actif').checked, transporteur: $('ex-tr').value.trim(), prix_domicile: n('ex-dom'), prix_relais: n('ex-rel'), seuil_gratuit: n('ex-seuil'),
+      domicile_actif: $('ex-domon').checked, relais_actif: $('ex-relon').checked, tracking_url_template: $('ex-url').value.trim(),
+      relais_recherche_url: $('ex-relurl').value.trim(), delai: $('ex-delai').value.trim() || '48 à 72 h ouvrées après paiement', updated_at: new Date().toISOString() };
+    if(row.actif && !row.domicile_actif && !row.relais_actif){ toast('Active au moins un mode de livraison', true); return; }
+    if(row.actif && !row.transporteur && !confirm('Aucun transporteur indiqué. Ouvrir quand même l\'expédition ?')) return;
+    const { error } = await sb.from('expedition_config').upsert(row);
+    if(error){ toast('Erreur : ' + errTxt(error.message), true); return; }
+    expCfg = row; closeSheet(); loadExpConfig(); toast(row.actif ? 'Expédition France ouverte ✅' : 'Réglages enregistrés (expédition fermée)');
+  });
+}
+
+/* ---------- fiches produits + grille de prix (site et serveur) ---------- */
+$('edit-sheets').addEventListener('click', async () => {
+  await loadSheets();
+  const ids = [...new Set([...products.map(p => p.id), ...Object.keys(sheets)])];
+  const pct = (v) => v == null ? '' : Number(v);
+  openSheet(`<h3>Fiches produits & prix</h3>
+    <p class="muted" style="margin-bottom:12px;">Affiché sur la fiche produit du site. La grille de prix est celle utilisée par le serveur pour calculer chaque commande.</p>
+    <div id="ps-list">${ids.map(id => { const r = sheets[id] || {}, p = products.find(x => x.id === id) || {};
+      const tiers = (PRICE_TIERS[id] || (p.base_price ? [[1, Number(p.base_price)]] : [])).map(t => t[0] + ':' + String(t[1])).join(', ');
+      return `<details class="card ps-row" data-id="${esc(id)}" style="margin-bottom:8px;">
+      <summary style="cursor:pointer; display:flex; justify-content:space-between; gap:8px;"><b>${esc(r.nom || p.name || pname(id))}</b><span class="muted">${r.lot ? 'lot ' + esc(r.lot) : ''}${r.expediable === false ? ' · 🚲 local seul.' : ''}</span></summary>
+      <div style="margin-top:10px;">
+        <div class="field"><label>Description</label><textarea class="ps-desc" rows="2">${esc(r.description || '')}</textarea></div>
+        <div class="field"><label>N° de lot</label><input class="ps-lot" value="${esc(r.lot || '')}"></div>
+        <div class="line-row" style="grid-template-columns:repeat(4,1fr);">
+          <div class="field"><label>CBD %</label><input class="ps-cbd" type="number" step="0.1" inputmode="decimal" value="${pct(r.cbd_pct)}"></div>
+          <div class="field"><label>THC %</label><input class="ps-thc" type="number" step="0.01" inputmode="decimal" value="${pct(r.thc_pct)}"></div>
+          <div class="field"><label>THV %</label><input class="ps-thv" type="number" step="0.1" inputmode="decimal" value="${pct(r.thv_pct)}"></div>
+          <div class="field"><label>CBG %</label><input class="ps-cbg" type="number" step="0.1" inputmode="decimal" value="${pct(r.cbg_pct)}"></div></div>
+        <div class="field"><label>Lien du certificat d'analyse (COA)</label><input class="ps-coa" value="${esc(r.coa_url || '/coa-' + id + '.pdf')}"></div>
+        <div class="field"><label>Poids proposés (g, séparés par des virgules)</label><input class="ps-poids" value="${esc((r.poids_options || [1, 3, 5, 10]).join(', '))}"></div>
+        <div class="field"><label>Grille de prix « dès X g : Y €/g »</label><input class="ps-tiers mono" value="${esc(tiers)}" placeholder="1:9, 3:8.5, 5:8, 50:7"></div>
+        <label class="check"><input type="checkbox" class="ps-exp" ${r.expediable !== false ? 'checked' : ''}> Expédiable en France (sinon livraison locale uniquement)</label>
+      </div></details>`; }).join('')}</div>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="ps-ok">Enregistrer</button></div>`);
+  $('ps-ok').addEventListener('click', async () => {
+    const rows = []; let bad = null;
+    document.querySelectorAll('#ps-list .ps-row').forEach(d => {
+      const id = d.dataset.id, q = (c) => d.querySelector(c), r = sheets[id] || {}, p = products.find(x => x.id === id) || {};
+      const tiers = q('.ps-tiers').value.split(/[,;]/).map(x => x.trim()).filter(Boolean).map(x => x.split(':').map(v => num(v)));
+      if(tiers.some(t => t.length !== 2 || !(t[0] > 0) || !(t[1] > 0))) bad = r.nom || p.name || id;
+      const poids = q('.ps-poids').value.split(/[,;\s]+/).map(v => num(v)).filter(v => v > 0);
+      const nv = (c) => { const v = num(q(c).value); return v == null ? null : v; };
+      rows.push({ product_id: id, nom: r.nom || p.name || pname(id), categorie: r.categorie || (p.category === 'resine' ? 'resine' : 'fleur'),
+        description: q('.ps-desc').value.trim() || null, lot: q('.ps-lot').value.trim() || null,
+        cbd_pct: nv('.ps-cbd'), thc_pct: nv('.ps-thc'), thv_pct: nv('.ps-thv'), cbg_pct: nv('.ps-cbg'),
+        coa_url: q('.ps-coa').value.trim() || null, poids_options: poids.length ? poids : null, expediable: q('.ps-exp').checked,
+        prix_paliers: tiers.length ? tiers.sort((a, b) => a[0] - b[0]) : null, updated_at: new Date().toISOString() });
+    });
+    if(bad){ toast('Grille de prix invalide pour ' + bad + ' (format 1:9, 3:8.5)', true); return; }
+    const { error } = await sb.from('menu_produits').upsert(rows, { onConflict: 'product_id' });
+    if(error){ toast('Erreur : ' + errTxt(error.message), true); return; }
+    await loadSheets(); closeSheet(); renderStock(); toast('Fiches et prix enregistrés — le site est à jour');
+  });
+});
+function validateSheet(o){
+  const now = new Date();
+  const fmt = (d) => d.getHours() + 'h' + String(d.getMinutes()).padStart(2, '0');
+  const round5 = (m) => { const d = new Date(now.getTime() + m * 60000); d.setMinutes(Math.ceil(d.getMinutes() / 5) * 5, 0, 0); return fmt(d); };
+  const opts = [20, 30, 45, 60, 90].map(m => round5(m));
+  openSheet(`<h3>Valider la commande de ${esc(o.customer_name || '')}</h3>
+    <p class="muted" style="margin-bottom:12px;">Heure de livraison annoncée au client :</p>
+    <div class="chips" id="time-chips">${opts.map((t, i) => `<button class="chip ${i === 1 ? 'on' : ''}" data-t="${t}">${t}</button>`).join('')}</div>
+    <div class="field"><label>Ou une autre heure</label><input id="time-custom" placeholder="ex : 18h30 ou demain 12h"></div>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="confirm-validate">Valider</button></div>`);
+  $('time-chips').addEventListener('click', (e) => {
+    const c = e.target.closest('.chip'); if(!c) return;
+    document.querySelectorAll('#time-chips .chip').forEach(x => x.classList.toggle('on', x === c)); $('time-custom').value = '';
+  });
+  $('confirm-validate').addEventListener('click', async () => {
+    const custom = $('time-custom').value.trim();
+    const chip = document.querySelector('#time-chips .chip.on');
+    const time = custom || (chip && chip.dataset.t);
+    if(!time) return;
+    if(!(await setStatus(o, 'confirmee', { heure: time }))) return;
+    o._new = false; renderOrders(); closeSheet(); toast('Commande confirmée — livraison ' + time);
+  });
+}
+function completeOrder(o){
+  openSheet(`<h3>Livrée — ${esc(o.customer_name || '')}</h3>
+    <p class="muted" style="margin-bottom:12px;">${eur(orderTotal(o))} · comment le client a payé ?</p>
+    <div class="chips" id="cp-pay">${Object.entries(PAYMENTS).map(([v, l], i) => `<button type="button" class="chip ${i === 0 ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}</div>
+    ${o.items_json && Object.keys(o.items_json).length ? `<div class="field" style="margin-top:6px;"><label>🎟️ Bonus ticket à gratter</label>
+      <div class="chips" id="cp-bonus">${[0, 10, 20, 30, 50].map(n => `<button type="button" class="chip ${n === 0 ? 'on' : ''}" data-n="${n}">${n ? '+' + n + ' %' : 'Aucun'}</button>`).join('')}<input id="cp-bonus-x" type="number" inputmode="numeric" min="0" max="200" placeholder="autre %" style="width:96px; padding:8px 10px;"></div>
+      <p class="muted" id="cp-bonus-hint" style="margin-top:6px;"></p></div>` : ''}
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="cp-ok">Livrée ✓</button></div>`);
+  const cpPct = () => { const x = $('cp-bonus-x'); if(!x) return 0; const v = x.value ? parseInt(x.value, 10) : parseInt((document.querySelector('#cp-bonus .chip.on') || {}).dataset?.n || '0', 10); return Math.max(0, Math.min(200, v || 0)); };
+  const cpBonus = () => { const pct = cpPct(), out = {}; if(!pct || !o.items_json) return out;
+    Object.entries(o.items_json).forEach(([pid, gr]) => { const b = Math.round(Number(gr) * pct) / 100; if(b > 0) out[pid] = b; }); return out; };
+  const cpHint = () => { const b = cpBonus(); if($('cp-bonus-hint')) $('cp-bonus-hint').textContent = Object.keys(b).length ? 'Ticket +' + cpPct() + ' % → ' + Object.entries(b).map(([pid, gr]) => '+' + String(gr).replace('.', ',') + ' g ' + pname(pid)).join(', ') + ' à ajouter dans le sachet' : ''; };
+  if($('cp-bonus')){
+    $('cp-bonus').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if(!c) return; document.querySelectorAll('#cp-bonus .chip').forEach(x => x.classList.toggle('on', x === c)); $('cp-bonus-x').value = ''; cpHint(); });
+    $('cp-bonus-x').addEventListener('input', () => { document.querySelectorAll('#cp-bonus .chip').forEach(x => x.classList.toggle('on', x.dataset.n === '0' && !$('cp-bonus-x').value)); cpHint(); });
+  }
+  $('cp-pay').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if(c) document.querySelectorAll('#cp-pay .chip').forEach(x => x.classList.toggle('on', x === c)); });
+  $('cp-ok').addEventListener('click', async () => {
+    const payment = document.querySelector('#cp-pay .chip.on').dataset.v;
+    const paid_at = payment === 'credit' ? null : dkey(new Date());
+    const r = await sb.from('orders').update({ payment, paid_at }).eq('id', o.id);
+    if(!r.error) Object.assign(o, { payment, paid_at });
+    // Bonus ticket : grammes offerts ajoutés à la commande (stock + coût), le montant ne change pas
+    const bonus = cpBonus(), pct = cpPct();
+    if(Object.keys(bonus).length){
+      const items = { ...o.items_json }; Object.entries(bonus).forEach(([pid, gr]) => { items[pid] = Math.round(((Number(items[pid]) || 0) + gr) * 100) / 100; });
+      const txt = 'Ticket +' + pct + ' % : ' + Object.entries(bonus).map(([pid, gr]) => '+' + String(gr).replace('.', ',') + ' g ' + pname(pid)).join(', ') + ' offerts';
+      const notes = [o.notes, txt].filter(Boolean).join(' · ');
+      let u = await sb.from('orders').update({ items_json: items, offert_json: bonus, bonus_pct: pct, notes }).eq('id', o.id);
+      if(u.error){ u = await sb.from('orders').update({ items_json: items, notes }).eq('id', o.id); if(!u.error) toast('Lance bonus-ticket-setup.sql pour garder le détail du bonus', true); }
+      if(!u.error) Object.assign(o, { items_json: items, offert_json: bonus, bonus_pct: pct, notes });
+    }
+    closeSheet(); doCompleteOrder(o, $('cp-ok'));
+  });
+}
+async function doCompleteOrder(o, btn){
+  btn.disabled = true;
+  let { error } = await sb.rpc('complete_order', { p_order: String(o.id) });
+  if(error && /function|complete_order/i.test(error.message || '')){
+    ({ error } = await sb.from('orders').update({ status: 'terminee' }).eq('id', o.id)); // SQL pas encore installé
+  }
+  if(error){ btn.disabled = false; toast('Erreur, réessaie', true); console.error(error); return; }
+  Object.assign(o, { status: 'terminee', completed_at: new Date().toISOString(), _new: false });
+  renderOrders(); toast('Livrée ✓' + (o.items_json ? ' — stock mis à jour' : '')); loadStock(true);
+  // Facture émise automatiquement par la base : on la recharge et on l'envoie au client s'il a laissé son e-mail
+  setTimeout(async () => {
+    await loadFactures(); const r = await sb.from('orders').select('*').eq('id', o.id).maybeSingle(); if(r.data) Object.assign(o, r.data); renderOrders();
+    if(o.customer_email && invoiceFor('commande', o.id)) callFn('admin-order', { action: 'envoyer-facture', id: String(o.id) }).catch(() => {});
+  }, 600);
+}
+async function cancelOrder(o){
+  const paid = o.payment_status === 'paid';
+  if(!confirm('Refuser / annuler la commande de ' + (o.customer_name || 'ce client') + ' ?' + (paid ? '\n\n⚠️ Elle est déjà PAYÉE : pense à rembourser le client et à émettre un avoir (onglet Factures).' : ''))) return;
+  if(!(await setStatus(o, 'annulee'))) return;
+  renderOrders(); toast('Commande annulée' + (o.reward_points ? ' — points fidélité rendus' : ''));
+}
+
+/* ---------- stock ---------- */
+async function loadStock(silent){
+  const { data, error } = await sb.from('products').select('*').order('category').order('name');
+  if(error){
+    if(!silent) $('stock-list').innerHTML = '<div class="empty">Le stock n\'est pas encore installé.<br>Lance le fichier <b>supabase-setup.sql</b> dans Supabase.</div>';
+    return;
+  }
+  products = data || []; renderStock(); loadMoves();
+  if(!document.querySelector('[data-view="stats"]').hidden) renderStats();
+}
+function renderStock(){
+  let value = 0;
+  $('stock-list').innerHTML = products.map(p => {
+    const qty = Number(p.stock_grams), cost = Number(p.cost_per_gram), price = Number(p.base_price);
+    value += qty * cost * vatMul();
+    const low = qty <= Number(p.low_stock_alert);
+    const margin = price > 0 && cost > 0 ? Math.round((price - cost * vatMul()) / price * 100) : null;
+    return `<div class="card ${p.active ? '' : 'off'}">
+      <div class="st-top"><div><div class="o-name">${esc(p.name)}</div><span class="pill">${p.category === 'resine' ? 'Résine' : 'Fleur'}</span> ${qty <= 0 ? '<span class="pill low">Rupture</span>' : low ? '<span class="pill low">Stock bas</span>' : ''} ${p.active ? '' : '<span class="pill">Masqué</span>'}</div>
+        <div class="st-qty">${g(qty)}</div></div>
+      <div class="st-meta"><span>Achat <b>${cost ? eur(cost) + '/g HT' + (vatRate() ? ' (' + eur(cost * vatMul()) + ' TTC)' : '') : '—'}</b></span><span>Vente <b>${eur(price)}/g</b></span><span>Marge <b>${margin != null ? margin + ' %' : '—'}</b></span><span>Alerte <b>${g(Number(p.low_stock_alert))}</b></span></div>
+      <div class="actions"><button class="btn primary grow" data-sa="in" data-id="${esc(p.id)}">+ Réassort</button><button class="btn" data-sa="edit" data-id="${esc(p.id)}">Modifier</button></div>
+    </div>`;
+  }).join('') || '<div class="empty">Aucun produit.</div>';
+  $('stock-value').textContent = value ? 'Valeur achat : ' + eur(value) : '';
+}
+async function loadMoves(){
+  const { data } = await sb.from('stock_movements').select('*').order('created_at', { ascending: false }).limit(25);
+  const reasons = { reassort:'Réassort', vente:'Vente', ajustement:'Ajustement', perte:'Perte / conso', annulation:'Vente annulée' };
+  $('moves').innerHTML = (data || []).map(m => {
+    const p = products.find(x => x.id === m.product_id);
+    const d = Number(m.delta_grams);
+    return `<div class="mv"><span>${esc(p ? p.name : m.product_id)} · <span class="muted">${reasons[m.reason] || esc(m.reason)} · ${ago(m.created_at)}</span></span><b class="${d >= 0 ? 'plus' : 'minus'}">${d >= 0 ? '+' : ''}${g(d)}</b></div>`;
+  }).join('') || '<div class="muted">Aucun mouvement pour l\'instant.</div>';
+}
+$('stock-list').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-sa]'); if(!b) return;
+  const p = products.find(x => x.id === b.dataset.id); if(!p) return;
+  if(b.dataset.sa === 'in'){
+    openSheet(`<h3>Réassort — ${esc(p.name)}</h3>
+      <div class="field"><label>Quantité reçue (g)</label><input id="in-qty" type="number" inputmode="decimal" min="0" step="0.1" placeholder="100"></div>
+      <div class="field"><label>Prix d'achat HT au gramme (€) — optionnel</label><input id="in-cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="${Number(p.cost_per_gram) || '3.50'}"></div>
+      <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="in-ok">Ajouter au stock</button></div>`);
+    $('in-ok').addEventListener('click', async () => {
+      const q = parseFloat($('in-qty').value.replace(',', '.')); const c = $('in-cost').value ? parseFloat($('in-cost').value.replace(',', '.')) : null;
+      if(!q || q <= 0) return;
+      const { error } = await sb.rpc('adjust_stock', { p_product: p.id, p_delta: q, p_reason: 'reassort', p_unit_cost: c });
+      if(error){ toast('Erreur, réessaie', true); return; }
+      closeSheet(); toast('+' + g(q) + ' ' + p.name); loadStock();
+    });
+  } else {
+    openSheet(`<h3>Modifier — ${esc(p.name)}</h3>
+      <div class="field"><label>Nom</label><input id="ed-name" value="${esc(p.name)}"></div>
+      <div class="field"><label>Catégorie</label><select id="ed-cat"><option value="fleur" ${p.category === 'fleur' ? 'selected' : ''}>Fleur</option><option value="resine" ${p.category === 'resine' ? 'selected' : ''}>Résine</option></select></div>
+      <div class="field"><label>Stock réel compté (g)</label><input id="ed-qty" type="number" inputmode="decimal" step="0.1" value="${Number(p.stock_grams)}"></div>
+      <div class="field"><label>Motif si le stock change</label><select id="ed-reason"><option value="ajustement">Ajustement / inventaire</option><option value="perte">Perte / conso perso / échantillon</option></select></div>
+      <div class="field"><label>Prix de vente au gramme (€)</label><input id="ed-price" type="number" inputmode="decimal" step="0.01" value="${Number(p.base_price)}"></div>
+      <div class="field"><label>Prix d'achat HT au gramme (€)</label><input id="ed-cost" type="number" inputmode="decimal" step="0.01" value="${Number(p.cost_per_gram)}"></div>
+      <div class="field"><label>M'alerter sous (g)</label><input id="ed-alert" type="number" inputmode="decimal" step="1" value="${Number(p.low_stock_alert)}"></div>
+      <div class="field"><label>Disponible à la vente</label><select id="ed-active"><option value="1" ${p.active ? 'selected' : ''}>Oui</option><option value="0" ${p.active ? '' : 'selected'}>Non (masquée, « Rupture » sur le site)</option></select></div>
+      <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="ed-ok">Enregistrer</button></div>`);
+    $('ed-ok').addEventListener('click', async () => {
+      const num = (id) => parseFloat(String($(id).value).replace(',', '.')) || 0;
+      const newQty = num('ed-qty'), delta = Math.round((newQty - Number(p.stock_grams)) * 100) / 100;
+      const { error } = await sb.from('products').update({ name: $('ed-name').value.trim() || p.name, category: $('ed-cat').value, base_price: num('ed-price'), cost_per_gram: num('ed-cost'), low_stock_alert: num('ed-alert'), active: $('ed-active').value === '1', updated_at: new Date().toISOString() }).eq('id', p.id);
+      if(error){ toast('Erreur, réessaie', true); return; }
+      if(delta !== 0){
+        const r = await sb.rpc('adjust_stock', { p_product: p.id, p_delta: delta, p_reason: $('ed-reason').value, p_unit_cost: null });
+        if(r.error){ toast('Erreur sur le stock', true); return; }
+      }
+      closeSheet(); toast('Enregistré'); loadStock();
+    });
+  }
+});
+
+// Nouvelle variété
+$('add-variety').addEventListener('click', () => {
+  openSheet(`<h3>Nouvelle variété</h3>
+    <div class="field"><label>Nom</label><input id="nv-name" placeholder="ex : Amnesia, Gelato…"></div>
+    <div class="field"><label>Catégorie</label><div class="chips" id="nv-cat"><button type="button" class="chip on" data-v="fleur">Fleur</button><button type="button" class="chip" data-v="resine">Résine</button></div></div>
+    <div class="field"><label>Prix de vente au gramme (€)</label><input id="nv-price" type="number" inputmode="decimal" step="0.01" min="0" placeholder="10"></div>
+    <div class="field"><label>Prix d'achat HT au gramme (€)</label><input id="nv-cost" type="number" inputmode="decimal" step="0.01" min="0" placeholder="3.50"></div>
+    <div class="field"><label>Stock de départ (g)</label><input id="nv-stock" type="number" inputmode="decimal" step="0.1" min="0" placeholder="0"></div>
+    <div class="field"><label>M'alerter sous (g)</label><input id="nv-alert" type="number" inputmode="decimal" step="1" min="0" value="20"></div>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="nv-ok">Ajouter</button></div>`);
+  $('nv-cat').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if(c) document.querySelectorAll('#nv-cat .chip').forEach(x => x.classList.toggle('on', x === c)); });
+  $('nv-ok').addEventListener('click', async () => {
+    const name = $('nv-name').value.trim();
+    if(!name){ toast('Indique le nom de la variété', true); return; }
+    const n = (id) => { const v = parseFloat(String($(id).value).replace(',', '.')); return isNaN(v) ? 0 : v; };
+    let base = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '') || 'variete';
+    let id = base, i = 2; while(products.some(p => p.id === id)) id = base + i++;
+    $('nv-ok').disabled = true;
+    const cost = n('nv-cost'), stock = n('nv-stock');
+    const { error } = await sb.from('products').insert({ id, name, category: document.querySelector('#nv-cat .chip.on').dataset.v,
+      base_price: n('nv-price'), cost_per_gram: cost, stock_grams: 0, low_stock_alert: n('nv-alert'), active: true });
+    if(error){ $('nv-ok').disabled = false; toast('Erreur, réessaie', true); console.error(error); return; }
+    if(stock > 0){
+      const r = await sb.rpc('adjust_stock', { p_product: id, p_delta: stock, p_reason: 'reassort', p_unit_cost: cost || null });
+      if(r.error) toast('Variété créée, mais erreur sur le stock', true);
+    }
+    closeSheet(); toast(name + ' ajoutée'); loadStock();
+  });
+});
+
+/* ---------- page menu « coffee shop » (menu.html) ---------- */
+$('edit-menu').addEventListener('click', async () => {
+  const [mp, mj] = await Promise.all([sb.from('menu_produits').select('*'), sb.from('menu_jour').select('*').eq('id', 1).maybeSingle()]);
+  if(mp.error || mj.error){ toast('Lance d\'abord menu-setup.sql dans Supabase', true); return; }
+  const rows = Object.fromEntries((mp.data || []).map(r => [r.product_id, r]));
+  const j = mj.data || { actif: true, titre: 'Le menu du jour' };
+  // toutes les variétés : celles du stock + celles déjà au menu
+  const ids = [...new Set([...products.map(p => p.id), ...Object.keys(rows)])];
+  const info = (id) => { const p = products.find(x => x.id === id) || {}; const r = rows[id] || {};
+    return { id, nom: r.nom || p.name || pname(id), categorie: r.categorie || (p.category === 'resine' ? 'resine' : 'fleur'), r, siteProduct: !!PRICE_TIERS[id], base_price: p.base_price }; };
+  const list = ids.map(info).sort((a, b) => (a.r.ordre ?? 999) - (b.r.ordre ?? 999));
+  openSheet(`<h3>Menu coffee shop</h3>
+    <p class="muted" style="margin-bottom:12px;">Ce que voient les clients sur <b>smokhousecbd.fr/menu.html</b>. Les prix viennent du site.</p>
+    <div class="card"><div class="o-name" style="margin-bottom:10px;">⭐ Le menu du jour</div>
+      <label class="check"><input type="checkbox" id="mj-actif" ${j.actif !== false ? 'checked' : ''}> Afficher le bloc en haut du menu</label>
+      <div class="field"><label>Titre de l'étiquette</label><input id="mj-titre" value="${esc(j.titre || 'Le menu du jour')}"></div>
+      <div class="field"><label>Variété mise en avant</label><select id="mj-prod"><option value="">— aucune —</option>${list.map(x => `<option value="${esc(x.id)}" ${j.product_id === x.id ? 'selected' : ''}>${esc(x.nom)}</option>`).join('')}</select></div>
+      <div class="field"><label>Texte (nouveautés, conseil…)</label><textarea id="mj-texte" rows="2">${esc(j.texte || '')}</textarea></div>
+      <div class="field"><label>Promo (étiquette orange, optionnel)</label><input id="mj-promo" value="${esc(j.promo || '')}" placeholder="ex : -10 % sur la Piatella jusqu'à dimanche"></div>
+    </div>
+    <div class="label">Variétés au menu</div>
+    <div id="mp-list">${list.map(x => `<details class="card mp-row" data-id="${esc(x.id)}" style="margin-bottom:8px;">
+      <summary style="cursor:pointer; display:flex; justify-content:space-between; gap:8px;"><b>${esc(x.nom)}</b><span class="muted">${x.r.visible === false ? 'masquée' : [x.r.profil, x.r.taux].filter(Boolean).join(' · ')}</span></summary>
+      <div style="margin-top:10px;">
+        <div class="line-row" style="grid-template-columns:1fr 1fr;"><select class="mp-cat"><option value="fleur" ${x.categorie === 'fleur' ? 'selected' : ''}>Fleur</option><option value="resine" ${x.categorie === 'resine' ? 'selected' : ''}>Résine</option></select>
+          <select class="mp-profil"><option value="">Profil —</option>${['indica', 'sativa', 'hybride'].map(v => `<option value="${v}" ${x.r.profil === v ? 'selected' : ''}>${v[0].toUpperCase() + v.slice(1)}</option>`).join('')}</select></div>
+        <div class="field"><label>Taux affiché</label><input class="mp-taux" value="${esc(x.r.taux || '')}" placeholder="ex : CBD 15 % ou THV 40 %"></div>
+        <div class="field"><label>Notes d'arôme</label><input class="mp-aromes" value="${esc(x.r.aromes || '')}" placeholder="ex : fruité, citronné, sucré"></div>
+        <div class="field"><label>Photo (lien, optionnel — sinon /menu/${esc(x.id)}.jpg)</label><input class="mp-photo" value="${esc(x.r.photo_url || '')}" placeholder="https://…"></div>
+        ${x.siteProduct ? '' : `<div class="field"><label>Prix au gramme sur le menu (€)</label><input class="mp-prix" type="number" inputmode="decimal" step="0.01" min="0" value="${x.r.prix_1g != null ? Number(x.r.prix_1g) : (Number(x.base_price) || '')}"></div>`}
+        <div class="field"><label>Ordre d'affichage</label><input class="mp-ordre" type="number" inputmode="numeric" value="${x.r.ordre ?? 100}"></div>
+        <label class="check"><input type="checkbox" class="mp-new" ${x.r.nouveau ? 'checked' : ''}> Badge « Nouveau »</label>
+        <label class="check"><input type="checkbox" class="mp-top" ${x.r.top_vente ? 'checked' : ''}> Badge « Top vente » forcé (sinon automatique : 2 meilleures ventes sur 30 jours)</label>
+        <label class="check"><input type="checkbox" class="mp-vis" ${x.r.visible !== false && (x.siteProduct || x.r.product_id) ? 'checked' : ''}> Visible sur le menu</label>
+      </div></details>`).join('')}</div>
+    <p class="muted" style="margin:6px 0 12px;">« Rupture » s'affiche tout seul quand le stock est à 0 ou que la variété n'est plus disponible.</p>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="menu-ok">Enregistrer</button></div>`);
+  $('menu-ok').addEventListener('click', async () => {
+    $('menu-ok').disabled = true;
+    const jr = { id: 1, actif: $('mj-actif').checked, titre: $('mj-titre').value.trim() || 'Le menu du jour', product_id: $('mj-prod').value || null,
+      texte: $('mj-texte').value.trim() || null, promo: $('mj-promo').value.trim() || null, updated_at: new Date().toISOString() };
+    const prows = [...document.querySelectorAll('#mp-list .mp-row')].map(d => {
+      const id = d.dataset.id, x = list.find(y => y.id === id), q = (c) => d.querySelector(c);
+      return { product_id: id, nom: x.nom, categorie: q('.mp-cat').value, profil: q('.mp-profil').value || null, taux: q('.mp-taux').value.trim() || null,
+        aromes: q('.mp-aromes').value.trim() || null, photo_url: q('.mp-photo').value.trim() || null,
+        prix_1g: q('.mp-prix') ? (num(q('.mp-prix').value) || null) : null, ordre: parseInt(q('.mp-ordre').value, 10) || 100,
+        nouveau: q('.mp-new').checked, top_vente: q('.mp-top').checked, visible: q('.mp-vis').checked, updated_at: new Date().toISOString() };
+    });
+    const bad = prows.find(r => r.visible && !PRICE_TIERS[r.product_id] && !(r.prix_1g > 0));
+    if(bad){ $('menu-ok').disabled = false; toast('Indique le prix au gramme de ' + bad.nom + ' (ou décoche « Visible »)', true); return; }
+    const [a, b] = await Promise.all([sb.from('menu_jour').upsert(jr), sb.from('menu_produits').upsert(prows, { onConflict: 'product_id' })]);
+    if(a.error || b.error){ $('menu-ok').disabled = false; toast('Erreur : ' + ((a.error || b.error).message || '').slice(0, 120), true); return; }
+    closeSheet(); toast('Menu mis à jour');
+  });
+});
+
+/* ---------- fidélité ---------- */
+// Ajouter un client à la main (carte boutique, sans compte en ligne)
+$('add-client').addEventListener('click', () => {
+  openSheet(`<h3>Nouveau client fidélité</h3>
+    <div class="field"><label>Prénom et nom</label><input id="nc-nom" placeholder="ex : Kevin Martin"></div>
+    <div class="field"><label>Téléphone (optionnel)</label><input id="nc-tel" type="tel" placeholder="06 …"></div>
+    <div class="field"><label>Email (optionnel)</label><input id="nc-mail" type="email" placeholder="client@exemple.fr"></div>
+    <p class="muted" style="margin:-4px 0 12px;">Avec l'email, s'il crée un jour un compte sur le site avec la même adresse, il retrouve automatiquement sa carte et ses points.</p>
+    <div class="field"><label>Points de départ</label><div class="chips" id="nc-chips">${[0, 10, 20, 50].map((n, i) => `<button type="button" class="chip ${i === 0 ? 'on' : ''}" data-n="${n}">${n}</button>`).join('')}</div>
+      <input id="nc-pts" type="number" inputmode="numeric" min="0" value="0"></div>
+    <div class="field"><label>🔒 Surnom / note privée (optionnel)</label><input id="nc-alias" placeholder="Surnom (ex : Kevin Brives)" style="margin-bottom:8px;"><input id="nc-note" placeholder="Note (ex : préfère la résine)"></div>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="nc-ok">Créer la carte</button></div>`);
+  $('nc-chips').addEventListener('click', (e) => { const ch = e.target.closest('.chip'); if(!ch) return; document.querySelectorAll('#nc-chips .chip').forEach(x => x.classList.toggle('on', x === ch)); $('nc-pts').value = ch.dataset.n; });
+  $('nc-ok').addEventListener('click', async () => {
+    const nom = $('nc-nom').value.trim(); if(!nom){ toast('Indique le nom du client', true); return; }
+    const mail = $('nc-mail').value.trim();
+    if(mail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){ toast('Email invalide', true); return; }
+    $('nc-ok').disabled = true;
+    const { data, error } = await sb.rpc('admin_creer_client', { p_nom: nom, p_email: mail || null, p_tel: $('nc-tel').value.trim() || null, p_points: parseInt($('nc-pts').value, 10) || 0 });
+    if(error){
+      $('nc-ok').disabled = false; const m = error.message || '';
+      toast(/EMAIL_EXISTE/.test(m) ? 'Un client a déjà cet email' : /schema cache|does not exist/.test(m) ? 'Lance d\'abord clients-manuels-setup.sql dans Supabase' : 'Erreur : ' + m.slice(0, 160), true);
+      console.error(error); return;
+    }
+    const num = data;
+    await loadClients();
+    const c = clients.find(x => x.member_number === num);
+    const alias = $('nc-alias').value.trim(), note = $('nc-note').value.trim();
+    if(c && (alias || note) && notesReady){
+      const row = { customer_id: c.id, alias: alias || null, note: note || null, updated_at: new Date().toISOString() };
+      const r = await sb.from('client_notes').upsert(row, { onConflict: 'customer_id' }); if(!r.error) clientNotes[c.id] = row;
+    }
+    closeSheet(); toast('Carte ' + num + ' créée'); renderClients(); pointsSheet(num);
+  });
+});
+
+// Règles : points gagnés par euro et liste des récompenses (utilisées aussi sur le site)
+$('fid-rules').addEventListener('click', async () => {
+  const [c, r] = await Promise.all([sb.from('fidelite_config').select('*').eq('id', 1).maybeSingle(), sb.from('fidelite_recompenses').select('*').order('points')]);
+  if(c.error || r.error){ toast('Lance d\'abord fidelite-commandes-setup.sql dans Supabase', true); return; }
+  const rate = c.data ? Number(c.data.points_par_euro) : 1, rws = r.data || [];
+  const rowHtml = (x = {}) => `<div class="line-row rw-row" style="grid-template-columns:64px 1fr 64px 40px;"><input class="rw-pts" type="number" inputmode="numeric" min="1" value="${x.points || ''}" placeholder="pts"><input class="rw-label" value="${esc(x.label || '')}" placeholder="ex : 2g offerts"><input class="rw-min" type="number" inputmode="decimal" min="0" step="1" value="${x.min_achat != null ? Number(x.min_achat) : ''}" placeholder="min €"><button type="button" aria-label="Retirer">×</button></div>`;
+  openSheet(`<h3>Règles fidélité</h3>
+    <div class="field"><label>Points gagnés par euro dépensé (commandes site)</label><input id="fr-rate" type="number" inputmode="decimal" step="0.1" min="0" value="${rate}"></div>
+    <p class="muted" style="margin:-4px 0 12px;">Crédités automatiquement quand tu passes la commande en « Livrée », retirés si tu l'annules.</p>
+    <div class="field"><label>Récompenses (points · description · achat minimum en €)</label><div id="fr-list">${rws.filter(x => x.active).map(rowHtml).join('')}</div>
+      <button class="btn ghost" type="button" id="fr-add" style="width:100%;">+ Ajouter une récompense</button></div>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="fr-ok">Enregistrer</button></div>`);
+  const bindRow = (row) => row.querySelector('button').addEventListener('click', () => row.remove());
+  document.querySelectorAll('#fr-list .rw-row').forEach(bindRow);
+  $('fr-add').addEventListener('click', () => { $('fr-list').insertAdjacentHTML('beforeend', rowHtml()); bindRow($('fr-list').lastElementChild); });
+  $('fr-ok').addEventListener('click', async () => {
+    const newRate = num($('fr-rate').value);
+    if(newRate == null || newRate < 0){ toast('Taux invalide', true); return; }
+    const rows = [...document.querySelectorAll('#fr-list .rw-row')].map(x => ({ points: parseInt(x.querySelector('.rw-pts').value, 10), label: x.querySelector('.rw-label').value.trim(), min_achat: num(x.querySelector('.rw-min').value) || 0 })).filter(x => x.points > 0 && x.label);
+    if(new Set(rows.map(x => x.points)).size !== rows.length){ toast('Deux récompenses ont le même nombre de points', true); return; }
+    $('fr-ok').disabled = true;
+    const e1 = await sb.from('fidelite_config').update({ points_par_euro: newRate, updated_at: new Date().toISOString() }).eq('id', 1);
+    const keep = new Set(rows.map(x => x.points));
+    const off = rws.filter(x => x.active && !keep.has(x.points));
+    for(const x of off) await sb.from('fidelite_recompenses').update({ active: false }).eq('points', x.points);
+    const e2 = rows.length ? await sb.from('fidelite_recompenses').upsert(rows.map(x => ({ ...x, active: true })), { onConflict: 'points' }) : { error: null };
+    if(e1.error || e2.error){ $('fr-ok').disabled = false; toast('Erreur, réessaie', true); console.error(e1.error || e2.error); return; }
+    closeSheet(); toast('Règles enregistrées : ' + String(newRate).replace('.', ',') + ' pt/€');
+  });
+});
+
+// Surnoms et notes privées (table à part, invisible pour les clients)
+let clientNotes = {}, notesReady = false;
+async function loadClientNotes(){
+  const { data, error } = await sb.from('client_notes').select('*');
+  notesReady = !error; clientNotes = {};
+  (data || []).forEach(n => { clientNotes[n.customer_id] = n; });
+}
+function clientLabel(id, name){
+  const n = id && clientNotes[id];
+  return n && n.alias ? n.alias + (name && !n.alias.toLowerCase().includes(String(name).toLowerCase()) ? ' (' + name + ')' : '') : (name || 'Client');
+}
+async function loadClients(){
+  await loadClientNotes();
+  let { data, error } = await sb.from('profiles').select('id, name, member_number, points, email, phone, is_manual').order('points', { ascending: false });
+  if(error) ({ data, error } = await sb.from('profiles').select('id, name, member_number, points, email').order('points', { ascending: false }));
+  if(error){ $('client-list').innerHTML = '<div class="muted">Erreur de chargement.</div>'; return; }
+  clients = data || []; renderClients();
+}
+function renderClients(){
+  const q = $('client-search').value.trim().toLowerCase();
+  const list = clients.filter(c => { const n = clientNotes[c.id] || {};
+    return !q || [c.name, c.member_number, c.email, c.phone, n.alias, n.note].some(v => String(v || '').toLowerCase().includes(q)); });
+  $('client-list').innerHTML = list.map(c => { const n = clientNotes[c.id] || {}; return `<div class="client">
+      <div style="min-width:0;"><div style="font-weight:600;">${esc(clientLabel(c.id, c.name || '—'))}</div><div class="mono muted">${esc(c.member_number)}${c.is_manual ? ' · <span class="tag" style="margin:0;">Carte boutique</span>' : ''}</div>
+        ${n.note ? `<div class="muted" style="font-size:12.5px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📝 ${esc(n.note)}</div>` : ''}</div>
+      <div class="row" style="flex:none;"><b class="mono" style="color:var(--moss); white-space:nowrap;">${c.points} pts</b><button class="btn" data-member="${esc(c.member_number)}">Ouvrir</button></div>
+    </div>`; }).join('') || '<div class="muted">Aucun client trouvé.</div>';
+}
+$('client-search').addEventListener('input', renderClients);
+$('client-list').addEventListener('click', (e) => { const b = e.target.closest('[data-member]'); if(b) pointsSheet(b.dataset.member); });
+
+function pointsSheet(member){
+  const c = clients.find(x => x.member_number === member);
+  const n = (c && clientNotes[c.id]) || {};
+  openSheet(`<h3>${esc(c ? clientLabel(c.id, c.name) : member)}</h3>
+    <p class="muted" style="margin-bottom:14px;">${esc(member)}${c && c.email ? ' · ' + esc(c.email) : ''}${c && c.phone ? ' · <a href="tel:' + esc(c.phone) + '" style="color:var(--moss);">' + esc(c.phone) + '</a>' : ''}${c && c.is_manual ? ' · carte boutique (sans compte en ligne)' : ''} · solde <b style="color:var(--moss);">${c ? c.points : '?'} pts</b></p>
+    ${c ? `<div class="card" style="margin-bottom:16px;">
+      <div class="field"><label>🔒 Surnom (visible par toi seul)</label><input id="cn-alias" value="${esc(n.alias || '')}" placeholder="ex : Kevin (Brives), Kevin grand"></div>
+      <div class="field"><label>🔒 Note privée</label><textarea id="cn-note" rows="3" placeholder="ex : préfère la résine, livrer après 18h, code porte 1234">${esc(n.note || '')}</textarea></div>
+      <button class="btn" style="width:100%;" id="cn-ok">Enregistrer la note</button></div>` : ''}
+    ${c && c.is_manual ? `<details class="card" style="margin-bottom:16px;"><summary style="cursor:pointer;">Modifier nom, email, téléphone</summary>
+      <div class="field" style="margin-top:10px;"><label>Nom</label><input id="mc-nom" value="${esc(c.name || '')}"></div>
+      <div class="field"><label>Email (si le client crée un compte avec, sa carte y est rattachée)</label><input id="mc-mail" type="email" value="${esc(c.email || '')}"></div>
+      <div class="field"><label>Téléphone</label><input id="mc-tel" type="tel" value="${esc(c.phone || '')}"></div>
+      <button class="btn" style="width:100%;" id="mc-ok">Enregistrer</button></details>` : ''}
+    <div class="field"><label>Ajouter des points (ex : 1 pt par € dépensé)</label>
+      <div class="chips" id="add-chips">${[5, 10, 20, 50].map(n => `<button class="chip" data-n="${n}">+${n}</button>`).join('')}</div>
+      <input id="pt-add" type="number" inputmode="numeric" min="1" placeholder="Nombre de points"></div>
+    <button class="btn primary" style="width:100%; margin-bottom:18px;" id="pt-add-ok">Ajouter</button>
+    <div class="field"><label>Utiliser une récompense</label>
+      <select id="pt-rm"><option value="50">50 pts — Accessoires offerts</option><option value="100">100 pts — 2g offerts (dès 20 €)</option><option value="150">150 pts — 4g fleur / 3g résine (dès 30 €)</option></select></div>
+    <button class="btn danger" style="width:100%;" id="pt-rm-ok">Retirer les points</button>`);
+  if($('mc-ok')) $('mc-ok').addEventListener('click', async () => {
+    const { error } = await sb.rpc('admin_modifier_client', { p_member: c.member_number, p_nom: $('mc-nom').value.trim(), p_email: $('mc-mail').value.trim(), p_tel: $('mc-tel').value.trim() });
+    if(error){ toast(/EMAIL_EXISTE/.test(error.message || '') ? 'Cet email est déjà utilisé par un autre client' : /NOM/.test(error.message || '') ? 'Nom obligatoire' : 'Erreur, réessaie', true); return; }
+    closeSheet(); toast('Client modifié'); await loadClients(); pointsSheet(c.member_number);
+  });
+  if($('cn-ok')) $('cn-ok').addEventListener('click', async () => {
+    if(!notesReady){ toast('Lance d\'abord client-notes-setup.sql dans Supabase', true); return; }
+    const row = { customer_id: c.id, alias: $('cn-alias').value.trim() || null, note: $('cn-note').value.trim() || null, updated_at: new Date().toISOString() };
+    const { error } = await sb.from('client_notes').upsert(row, { onConflict: 'customer_id' });
+    if(error){ toast('Erreur, réessaie', true); console.error(error); return; }
+    clientNotes[c.id] = row; closeSheet(); toast('Note enregistrée'); renderClients(); renderOrders();
+  });
+  $('add-chips').addEventListener('click', (e) => { const ch = e.target.closest('.chip'); if(ch) $('pt-add').value = ch.dataset.n; });
+  $('pt-add-ok').addEventListener('click', async () => {
+    const n = parseInt($('pt-add').value, 10); if(!n || n <= 0) return;
+    const { data, error } = await sb.rpc('add_points_by_member', { member_number_input: member, points_to_add: n });
+    if(error){ toast(/MEMBER_NOT_FOUND/.test(error.message) ? 'Carte inconnue' : 'Erreur, réessaie', true); return; }
+    closeSheet(); toast('+' + n + ' pts — solde ' + data + ' pts'); loadClients();
+  });
+  $('pt-rm-ok').addEventListener('click', async () => {
+    const n = parseInt($('pt-rm').value, 10);
+    if(c && c.points < n){ toast('Pas assez de points', true); return; }
+    const { error } = await sb.rpc('remove_points_by_member', { member_number_input: member, points_to_remove: n });
+    if(error){ toast('Erreur, réessaie', true); return; }
+    closeSheet(); toast('-' + n + ' pts'); loadClients();
+  });
+}
+let scanner = null;
+function stopScan(){ if(scanner){ scanner.stop().catch(() => {}); scanner = null; } }
+$('scan-btn').addEventListener('click', () => {
+  openSheet(`<h3>Scanner une carte</h3><div id="qr-reader"></div><p class="muted">Vise le QR code de la carte fidélité du client.</p>`);
+  if(!window.Html5Qrcode){ toast('Scanner indisponible', true); return; }
+  scanner = new Html5Qrcode('qr-reader');
+  scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 230 }, async (text) => {
+    stopScan();
+    if(!clients.length) await loadClients();
+    if(!clients.find(x => x.member_number === text)){ closeSheet(); toast('QR non reconnu', true); return; }
+    try{ navigator.vibrate && navigator.vibrate(80); }catch(e){}
+    pointsSheet(text);
+  }, () => {}).catch((err) => toast('Caméra inaccessible : ' + (err.message || err), true));
+});
+
+/* ---------- chiffres (site + ventes hors site) ---------- */
+const PAYMENTS = { especes:'Espèces', carte:'Carte', virement:'Virement', credit:'Crédit', autre:'Autre' };
+const pad2 = (n) => String(n).padStart(2, '0');
+const dkey = (d) => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+const fromKey = (k) => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+const dayLabel = (k) => {
+  const t = dkey(new Date()), y = dkey(new Date(Date.now() - 864e5));
+  if(k === t) return "Aujourd'hui"; if(k === y) return 'Hier';
+  return fromKey(k).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+};
+const num = (v) => { const n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? null : n; };
+
+async function loadSales(){
+  const since = dkey(new Date(Date.now() - 400 * 864e5));
+  const { data, error } = await sb.from('manual_sales').select('*').gte('sale_date', since).order('sale_date', { ascending: false }).limit(3000);
+  if(error){ sales = null; } else sales = data || [];
+  if(!document.querySelector('[data-view="stats"]').hidden) renderStats();
+}
+
+function itemsCostLive(items){
+  if(!items || !Object.keys(items).length) return null;
+  let total = 0;
+  for(const [pid, grams] of Object.entries(items)){
+    const p = products.find(x => x.id === pid);
+    const c = p ? Number(p.cost_per_gram) : 0;
+    if(!c) return null;
+    total += c * Number(grams);
+  }
+  return Math.round(total * 100) / 100;
+}
+
+// Toutes les ventes (site livrées + hors site) sous un même format
+function allEntries(){
+  const list = [];
+  orders.filter(o => o.status === 'terminee' || isFrPaid(o)).forEach(o => {
+    const fr = o.mode === 'france';
+    list.push({ kind:'site', mode: fr ? 'france' : 'local', id:String(o.id), date: fr && o.paid_at ? o.paid_at : dkey(new Date(o.completed_at || o.created_at)), label:(fr ? '📦 ' : '🚲 ') + (o.customer_name || 'Client site'),
+      amount:orderTotal(o), cost:ttc(o.cost_total != null ? Number(o.cost_total) : itemsCostLive(o.items_json)), items:o.items_json || null, ref:o });
+  });
+  (sales || []).forEach(sv => {
+    list.push({ kind:'manual', id:String(sv.id), date:sv.sale_date, label:sv.note || PAYMENTS[sv.payment] || 'Vente',
+      amount:Number(sv.amount), cost:ttc(sv.cost_amount != null ? Number(sv.cost_amount) : null), items:sv.items_json || null, payment:sv.payment, ref:sv });
+  });
+  return list;
+}
+function summarize(list){
+  const ca = list.reduce((a, e) => a + e.amount, 0);
+  const withCost = list.filter(e => e.cost != null);
+  const marge = withCost.reduce((a, e) => a + e.amount - e.cost, 0);
+  return { ca, marge, n:list.length, nCost:withCost.length, caCost:withCost.reduce((a, e) => a + e.amount, 0) };
+}
+
+$('period').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if(!b) return;
+  period = b.dataset.p; document.querySelectorAll('#period button').forEach(x => x.classList.toggle('active', x === b)); renderStats();
+});
+
+function renderStats(){
+  const keys = [];
+  $('month-nav').hidden = period !== 'mo';
+  if(period === 'mo'){
+    const now = new Date(), first = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+    const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
+    const end = last > now ? now : last;
+    for(let d = new Date(end); d >= first; d.setDate(d.getDate() - 1)) keys.push(dkey(d));
+    $('m-label').textContent = first.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
+    $('m-next').disabled = monthOffset >= 0;
+    if(!keys.length) keys.push(dkey(first));
+  } else {
+    const days = { day:1, week:7, month:30, quarter:90 }[period];
+    for(let i = 0; i < days; i++) keys.push(dkey(new Date(Date.now() - i * 864e5)));
+  }
+  const startKey = keys[keys.length - 1], endKey = keys[0];
+  const entries = allEntries().filter(e => e.date >= startKey && e.date <= endKey);
+  const S = summarize(entries);
+  const site = entries.filter(e => e.kind === 'site'), manual = entries.filter(e => e.kind === 'manual');
+
+  $('k-ca').textContent = eur(S.ca);
+  const loc = site.filter(e => e.mode !== 'france'), fra = site.filter(e => e.mode === 'france'), sum = (l) => l.reduce((a, e) => a + e.amount, 0);
+  $('k-ca-sub').textContent = '🚲 Local ' + eur(sum(loc)) + ' · 📦 France ' + eur(sum(fra)) + ' · Hors site ' + eur(sum(manual));
+  $('k-nb').textContent = S.n;
+  $('k-nb-sub').textContent = loc.length + ' local · ' + fra.length + ' France · ' + manual.length + ' hors site';
+  $('k-avg').textContent = S.n ? eur(S.ca / S.n) : '—';
+  // Moyennes : seulement sur les jours où des ventes sont notées (les jours non notés ne faussent pas le calcul)
+  const nDays = new Set(entries.map(e => e.date)).size;
+  const margeOk = S.n && S.nCost === S.n;
+  $('k-avgday').textContent = nDays ? eur(S.ca / nDays) : '—';
+  $('k-avgday-sub').textContent = nDays ? 'Sur ' + nDays + ' jour' + (nDays > 1 ? 's' : '') + ' de vente' + (margeOk ? ' · marge ' + eur(S.marge / nDays) : '') : '';
+  $('k-month').textContent = nDays ? eur(S.ca / nDays * 30) : '—';
+  $('k-month-sub').textContent = nDays ? 'Moyenne/jour × 30' + (margeOk ? ' · marge ≈ ' + eur(S.marge / nDays * 30) : '') : '';
+  // Bénéfice net = marge − cotisations (calculées sur le chiffre d'affaires)
+  const rate = taxRate(), cotis = S.ca * rate / 100, net = S.marge - cotis;
+  $('k-net-rate').textContent = '(après ' + String(rate).replace('.', ',') + ' % de cotisations)';
+  $('k-net').textContent = margeOk ? eur(net) : '—';
+  $('k-net-sub').textContent = !S.n ? '' : margeOk
+    ? 'Marge ' + eur(S.marge) + ' − cotisations ' + eur(cotis) + (nDays ? ' · ≈ ' + eur(net / nDays) + '/jour · ≈ ' + eur(net / nDays * 30) + '/mois' : '')
+    : 'Cotisations à prévoir : ' + eur(cotis) + " · renseigne tous les prix d'achat pour voir le net";
+  $('k-avgday-sub').textContent += margeOk && nDays ? ' · net ' + eur(net / nDays) : '';
+  $('k-month-sub').textContent += margeOk && nDays ? ' · net ≈ ' + eur(net / nDays * 30) : '';
+  $('k-marge').textContent = S.nCost ? eur(S.marge) : '—';
+  const costTTC = entries.reduce((a, e) => a + (e.cost != null ? e.cost : 0), 0), costHT = costTTC / vatMul();
+  $('k-cost').textContent = S.nCost ? eur(costTTC) : '—';
+  $('k-cost-sub').textContent = !S.nCost ? (S.n ? "Prix d'achat manquants" : '') : 'HT ' + eur(costHT) + (vatRate() ? ' + TVA ' + eur(costTTC - costHT) : '') + (S.nCost < S.n ? ' · sur ' + S.nCost + '/' + S.n + ' ventes' : '') + (S.ca ? ' · ' + Math.round(costTTC / S.ca * 100) + ' % du CA' : '');
+  $('k-marge-sub').textContent = !S.n ? '' : S.nCost === S.n
+    ? (S.ca ? Math.round(S.marge / S.ca * 100) + ' % du CA' : '')
+    : (S.nCost ? 'Sur ' + S.nCost + '/' + S.n + ' ventes (coût connu)' : "Prix d'achat manquants");
+
+  // produits sans prix d'achat
+  const missing = products.filter(p => p.active && !Number(p.cost_per_gram));
+  $('cost-warning').hidden = !missing.length || !products.length;
+  $('cost-warning-txt').innerHTML = missing.length ? "Il manque le prix d'achat de <b>" + missing.map(p => esc(p.name)).join(', ') + '</b> : la marge ne peut pas être calculée pour ces produits.' : '';
+
+  // jour par jour
+  $('days-list').innerHTML = keys.map(k => {
+    const dayE = entries.filter(e => e.date === k), d = summarize(dayE);
+    return `<button class="day-row ${dayE.length ? '' : 'zero'}" data-day="${k}">
+      <div><div class="d">${esc(dayLabel(k))}</div><div class="n">${dayE.length ? dayE.length + ' vente' + (dayE.length > 1 ? 's' : '') : 'Aucune vente'}</div></div>
+      <div class="amt">${eur(d.ca)}<small>${d.nCost ? 'achat ' + eur(dayE.reduce((a, e) => a + (e.cost || 0), 0)) + ' · marge ' + eur(d.marge) : ''}</small></div></button>`;
+  }).join('');
+
+  // produits vendus
+  const perProduct = {};
+  entries.forEach(e => { if(e.items) Object.entries(e.items).forEach(([pid, gr]) => { perProduct[pid] = (perProduct[pid] || 0) + Number(gr); }); });
+  const max = Math.max(1, ...Object.values(perProduct));
+  $('top-products').innerHTML = Object.entries(perProduct).sort((a, b) => b[1] - a[1]).map(([pid, grams]) =>
+    `<div class="bar-row"><span>${esc(pname(pid))}</span><div class="bar"><i style="width:${Math.round(grams / max * 100)}%"></i></div><b class="mono">${g(grams)}</b></div>`
+  ).join('') || '<div class="muted">Aucune vente détaillée par produit sur la période.</div>';
+
+  if(sales === null) $('k-ca-sub').textContent = 'Ventes hors site pas encore installées (lance ventes-setup.sql)';
+}
+
+$('m-prev').addEventListener('click', () => { monthOffset--; renderStats(); });
+$('m-next').addEventListener('click', () => { if(monthOffset < 0){ monthOffset++; renderStats(); } });
+$('days-list').addEventListener('click', (e) => { const b = e.target.closest('[data-day]'); if(b) daySheet(b.dataset.day); });
+
+function daySheet(k){
+  const dayE = allEntries().filter(e => e.date === k), d = summarize(dayE);
+  openSheet(`<h3 style="text-transform:capitalize;">${esc(dayLabel(k))}</h3>
+    <p class="muted" style="margin-bottom:10px;">CA <b style="color:var(--moss);">${eur(d.ca)}</b>${d.nCost ? ' · achat <b style="color:var(--fg);">' + eur(dayE.reduce((a, e) => a + (e.cost || 0), 0)) + '</b> · marge <b style="color:var(--fg);">' + eur(d.marge) + '</b>' : ''}</p>
+    <div id="day-entries">${dayE.map(e => `<div class="entry">
+        <div><span class="tag ${e.kind === 'site' ? 'site' : ''}">${e.kind === 'site' ? 'Site' : esc(PAYMENTS[e.payment] || 'Hors site')}</span>${esc(e.label)}
+          <div class="muted" style="margin-top:3px;">${e.items ? Object.entries(e.items).map(([pid, gr]) => gr + ' g ' + esc(pname(pid))).join(', ') : ''}${e.cost != null ? (e.items ? ' · ' : '') + 'coût ' + eur(e.cost) + (vatRate() ? ' TTC' : '') : ''}</div></div>
+        <div style="text-align:right;"><b class="mono">${eur(e.amount)}</b><br><button class="btn ghost" style="min-height:32px; padding:4px 10px; margin-top:4px; font-size:12px;" data-edit="${e.kind}:${esc(e.id)}">Modifier</button> <button class="btn ghost" style="min-height:32px; padding:4px 10px; margin-top:4px; font-size:12px;" data-inv="${e.kind}:${esc(e.id)}">🧾${invoiceFor(e.kind === 'site' ? 'commande' : 'vente_manuelle', e.id) ? ' ✓' : ''}</button></div>
+      </div>`).join('') || '<div class="muted" style="padding:10px 0;">Aucune vente ce jour-là.</div>'}</div>
+    <button class="btn primary" style="width:100%; margin-top:14px;" id="day-add">+ Ajouter une vente ce jour-là</button>`);
+  $('day-add').addEventListener('click', () => saleSheet(null, k));
+  $('day-entries').addEventListener('click', (ev) => {
+    const iv = ev.target.closest('[data-inv]');
+    if(iv){ const [kind, id] = iv.dataset.inv.split(':');
+      if(kind === 'site'){ const o = orders.find(x => String(x.id) === id); if(o) invoiceForOrder(o); }
+      else { const sv = (sales || []).find(x => String(x.id) === id); if(sv) invoiceForSale(sv); }
+      return; }
+    const b = ev.target.closest('[data-edit]'); if(!b) return;
+    const [kind, id] = b.dataset.edit.split(':');
+    if(kind === 'site') siteOrderSheet(orders.find(o => String(o.id) === id), k);
+    else saleSheet((sales || []).find(x => String(x.id) === id), k);
+  });
+}
+
+// Ajouter / modifier une vente hors site
+function saleSheet(sale, dateKey){
+  if(sales === null){ toast('Lance d\'abord ventes-setup.sql dans Supabase', true); return; }
+  const editing = !!sale;
+  const date = editing ? sale.sale_date : (dateKey || dkey(new Date()));
+  const pay = editing ? sale.payment : 'especes';
+  const opts = products.filter(p => p.active || editing).map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')
+            || Object.entries(NAMES).map(([id, n]) => `<option value="${id}">${esc(n)}</option>`).join('');
+  openSheet(`<h3>${editing ? 'Modifier la vente' : 'Vente manuelle'}</h3>
+    ${editing && invoiceFor('vente_manuelle', sale.id) ? `<p class="muted" style="color:var(--clay); margin-bottom:10px;">Facturée (${esc(invoiceFor('vente_manuelle', sale.id).numero)}) : la facture ne changera pas. Pour corriger, émets un avoir.</p>` : ''}
+    <div class="field"><label>Client</label><input id="sl-client" value="${editing ? esc(sale.client || '') : ''}" placeholder="Nom du client (ou laisse vide : particulier)"></div>
+    <div class="field"><label>Date</label><input id="sl-date" type="date" value="${date}" max="${dkey(new Date())}"></div>
+    ${editing
+      ? (sale.items_json ? `<p class="muted" style="margin-bottom:12px;">Produits : ${Object.entries(sale.items_json).map(([pid, gr]) => gr + ' g ' + esc(pname(pid))).join(', ')}${sale.offert_json ? '<br>Dont offert : ' + Object.entries(sale.offert_json).map(([pid, gr]) => gr + ' g ' + esc(pname(pid))).join(', ') + (sale.points_utilises ? ' (-' + sale.points_utilises + ' pts)' : '') : ''}<br>Pour changer les produits, supprime la vente et recrée-la.</p>` : '')
+      : `<div class="field"><label>Produits vendus (optionnel, pour le stock et la marge)</label><div id="sl-lines"></div>
+         <div class="actions" style="margin-top:0;"><button class="btn ghost grow" type="button" id="sl-add-line">+ Produit vendu</button><button class="btn ghost grow" type="button" id="sl-add-gift">🎁 Produit offert</button></div></div>
+         <div class="field"><label>🎟️ Bonus ticket à gratter (grammes offerts en plus)</label>
+           <div class="chips" id="sl-bonus">${[0, 10, 20, 30, 50].map(n => `<button type="button" class="chip ${n === 0 ? 'on' : ''}" data-n="${n}">${n ? '+' + n + ' %' : 'Aucun'}</button>`).join('')}<input id="sl-bonus-x" type="number" inputmode="numeric" min="0" max="200" placeholder="autre %" style="width:96px; padding:8px 10px;"></div>
+           <p class="muted" id="sl-bonus-hint" style="margin-top:6px;"></p></div>
+         <div class="field" id="sl-fid" hidden><label>Points fidélité utilisés pour le cadeau</label>
+           <div class="line-row" style="grid-template-columns:96px 1fr;"><input id="sl-pts" type="number" inputmode="numeric" min="0" step="1" placeholder="ex : 150"><input id="sl-card" list="sl-cards" placeholder="Carte client (nom ou SH-…) — optionnel"></div>
+           <datalist id="sl-cards">${clients.map(c => `<option value="${esc(c.member_number)}">${esc(c.name || '')} · ${c.points} pts</option>`).join('')}</datalist>
+           <p class="muted" style="margin-top:6px;">Si tu choisis une carte, les points lui sont retirés automatiquement.</p></div>
+         <label class="check" id="sl-deduct-wrap" hidden><input type="checkbox" id="sl-deduct" checked> Retirer ces grammes du stock</label>`}
+    <div class="field"><label>Montant encaissé (€)</label><input id="sl-amount" type="number" inputmode="decimal" step="0.01" min="0" value="${editing ? Number(sale.amount) : ''}" placeholder="0,00"></div>
+    <div class="field"><label>Coût d'achat HT (€) <span id="sl-cost-hint"></span></label><input id="sl-cost" type="number" inputmode="decimal" step="0.01" min="0" value="${editing && sale.cost_amount != null ? Number(sale.cost_amount) : ''}" placeholder="Laisse vide si tu ne sais pas"></div>
+    <div class="field"><label>Paiement (e / c / v / cr)</label><div class="chips" id="sl-pay">${Object.entries(PAYMENTS).map(([v, l]) => `<button type="button" class="chip ${v === pay ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}</div></div>
+    ${editing ? '' : '<label class="check"><input type="checkbox" id="sl-inv"> Émettre une facture (n° SH-…)</label>'}
+    <div class="field"><label>Note (lieu, remise…)</label><input id="sl-note" value="${editing ? esc(sale.note || '') : ''}" placeholder="ex : Lucas, boutique"></div>
+    <div class="actions">${editing ? '<button class="btn danger" id="sl-del">Supprimer</button>' : '<button class="btn ghost" onclick="closeSheet()">Annuler</button>'}<button class="btn primary grow" id="sl-ok">Enregistrer</button></div>`);
+
+  let amountDirty = editing, costDirty = editing;
+  $('sl-amount').addEventListener('input', () => amountDirty = true);
+  $('sl-cost').addEventListener('input', () => costDirty = true);
+  $('sl-pay').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if(c) document.querySelectorAll('#sl-pay .chip').forEach(x => x.classList.toggle('on', x === c)); });
+
+  // Bonus ticket : % appliqué aux grammes payés, offert dans le même produit
+  const bonusPct = () => { const x = $('sl-bonus-x'); const v = x && x.value ? parseInt(x.value, 10) : parseInt((document.querySelector('#sl-bonus .chip.on') || {}).dataset?.n || '0', 10); return Math.max(0, Math.min(200, v || 0)); };
+  const readBonus = () => {
+    const pct = bonusPct(), out = {}; if(!pct) return out;
+    document.querySelectorAll('#sl-lines .line-row:not(.gift)').forEach(r => {
+      const pid = r.querySelector('select').value, gr = num(r.querySelector('input').value);
+      if(pid && gr > 0) out[pid] = Math.round(((out[pid] || 0) + gr * pct / 100) * 100) / 100;
+    });
+    return out;
+  };
+  const addInto = (a, b) => { Object.entries(b).forEach(([pid, gr]) => { a[pid] = Math.round(((a[pid] || 0) + gr) * 100) / 100; }); return a; };
+  const readLines = () => {
+    const items = {};
+    document.querySelectorAll('#sl-lines .line-row').forEach(r => {
+      const pid = r.querySelector('select').value, gr = num(r.querySelector('input').value);
+      if(pid && gr > 0) items[pid] = Math.round(((items[pid] || 0) + gr) * 100) / 100;
+    });
+    return addInto(items, readBonus());
+  };
+  const readGifts = () => {
+    const items = {};
+    document.querySelectorAll('#sl-lines .line-row.gift').forEach(r => {
+      const pid = r.querySelector('select').value, gr = num(r.querySelector('input').value);
+      if(pid && gr > 0) items[pid] = Math.round(((items[pid] || 0) + gr) * 100) / 100;
+    });
+    return addInto(items, readBonus());
+  };
+  const recompute = () => {
+    const items = readLines(), gifts = readGifts(), has = Object.keys(items).length > 0;
+    const bp = bonusPct(), bonus = readBonus();
+    $('sl-bonus-hint').textContent = !bp ? '' : Object.keys(bonus).length
+      ? 'Ticket +' + bp + ' % → ' + Object.entries(bonus).map(([pid, gr]) => '+' + String(gr).replace('.', ',') + ' g ' + pname(pid)).join(', ') + ' offerts'
+      : 'Ajoute le produit vendu (avec ses grammes) pour calculer le bonus.';
+    $('sl-deduct-wrap').hidden = !has;
+    $('sl-fid').hidden = !document.querySelector('#sl-lines .line-row.gift');
+    if(!has){ $('sl-cost-hint').textContent = ''; return; }
+    if(!amountDirty){
+      const paid = {}; Object.entries(items).forEach(([pid, gr]) => { const r = gr - (gifts[pid] || 0); if(r > 0.001) paid[pid] = r; });
+      let t = 0; Object.entries(paid).forEach(([pid, gr]) => { const p = products.find(x => x.id === pid); t += (PRICE_TIERS[pid] ? rate(pid, gr) : Number(p && p.base_price) || 0) * gr; });
+      $('sl-amount').value = (Math.round(t * 100) / 100).toFixed(2);
+    }
+    const c = itemsCostLive(items);
+    $('sl-cost-hint').textContent = c != null ? '— calculé : ' + eur(c) : "— prix d'achat manquant pour un produit";
+    if(!costDirty) $('sl-cost').value = c != null ? c.toFixed(2) : '';
+  };
+  if(!editing){
+    const addLine = (gift) => {
+      const row = document.createElement('div'); row.className = 'line-row' + (gift === true ? ' gift' : '');
+      row.innerHTML = `<select>${opts}</select><input type="number" inputmode="decimal" min="0" step="0.1" placeholder="${gift === true ? 'g offerts' : 'g'}"><button type="button" aria-label="Retirer">×</button>`;
+      row.querySelector('button').addEventListener('click', () => { row.remove(); recompute(); });
+      row.querySelector('select').addEventListener('change', recompute);
+      row.querySelector('input').addEventListener('input', recompute);
+      $('sl-lines').appendChild(row); recompute();
+    };
+    $('sl-add-line').addEventListener('click', () => addLine(false));
+    $('sl-add-gift').addEventListener('click', () => addLine(true));
+    $('sl-bonus').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if(!c) return; document.querySelectorAll('#sl-bonus .chip').forEach(x => x.classList.toggle('on', x === c)); $('sl-bonus-x').value = ''; recompute(); });
+    $('sl-bonus-x').addEventListener('input', () => { document.querySelectorAll('#sl-bonus .chip').forEach(x => x.classList.toggle('on', x.dataset.n === '0' && !$('sl-bonus-x').value)); recompute(); });
+    if(!clients.length) loadClients().then(() => { const dl = $('sl-cards'); if(dl) dl.innerHTML = clients.map(c => `<option value="${esc(c.member_number)}">${esc(c.name || '')} · ${c.points} pts</option>`).join(''); }).catch(() => {});
+  }
+
+  $('sl-ok').addEventListener('click', async () => {
+    const d = $('sl-date').value || dkey(new Date());
+    const amount = num($('sl-amount').value);
+    if(amount == null){ toast('Indique le montant encaissé', true); return; }
+    const cost = num($('sl-cost').value);
+    const payment = (document.querySelector('#sl-pay .chip.on') || {}).dataset?.v || 'especes';
+    const note = $('sl-note').value.trim(), client = $('sl-client').value.trim();
+    const wantInv = !editing && $('sl-inv').checked;
+    $('sl-ok').disabled = true;
+    let error, newId = null;
+    if(editing){
+      const upd = { sale_date:d, amount, cost_amount:cost, payment, note:note || null };
+      if('paid_at' in sale){ upd.client = client || null;
+        upd.paid_at = payment === 'credit' ? null : (sale.payment === 'credit' || !sale.paid_at ? d : sale.paid_at); }
+      ({ error } = await sb.from('manual_sales').update(upd).eq('id', sale.id));
+    } else {
+      const items = readLines(), gifts = readGifts(); let data;
+      const pts = parseInt($('sl-pts') ? $('sl-pts').value : '', 10) || 0;
+      const card = ($('sl-card') ? $('sl-card').value : '').trim().toUpperCase();
+      if(card && !clients.find(c => c.member_number === card)){ $('sl-ok').disabled = false; toast('Carte client inconnue : choisis-la dans la liste', true); return; }
+      const cardC = clients.find(c => c.member_number === card);
+      if(cardC && pts > cardC.points){ $('sl-ok').disabled = false; toast(cardC.name + ' n\'a que ' + cardC.points + ' pts', true); return; }
+      // note auto : « +3 g OG Kush offerts (-150 pts) »
+      const bpct = bonusPct();
+      const giftTxt = (bpct ? 'Ticket +' + bpct + ' % · ' : '') + (Object.keys(gifts).length ? '+' + Object.entries(gifts).map(([pid, gr]) => String(gr).replace('.', ',') + ' g ' + pname(pid)).join(', +') + ' offerts' + (pts ? ' (-' + pts + ' pts)' : '') : (pts ? '-' + pts + ' pts fidélité' : ''));
+      const fullNote = [note, giftTxt].filter(Boolean).join(' · ');
+      ({ data, error } = await sb.rpc('add_manual_sale', { p_date:d, p_amount:amount, p_items:Object.keys(items).length ? items : null,
+        p_cost:cost, p_payment:payment, p_note:fullNote, p_deduct:$('sl-deduct').checked }));
+      newId = data;
+      if(!error){
+        const extra = {};
+        if(client || cardC) extra.client = client || cardC.name;
+        if(Object.keys(gifts).length) extra.offert_json = gifts;
+        if(pts) extra.points_utilises = pts;
+        if(Object.keys(extra).length){
+          const r = await sb.from('manual_sales').update(extra).eq('id', newId);
+          if(r.error && (extra.offert_json || extra.points_utilises)) toast('Lance offerts-setup.sql pour garder le détail des cadeaux', true);
+        }
+        if(cardC && pts){
+          const r = await sb.rpc('remove_points_by_member', { member_number_input: cardC.member_number, points_to_remove: pts });
+          if(r.error) toast('Vente ajoutée, mais points non retirés : fais-le dans Fidélité', true); else cardC.points -= pts;
+        }
+      }
+    }
+    if(error){ $('sl-ok').disabled = false; toast('Erreur, réessaie', true); console.error(error); return; }
+    closeSheet(); toast(editing ? 'Vente modifiée' : 'Vente ajoutée : ' + eur(amount));
+    await loadSales(); loadStock(true); if(!document.querySelector('[data-view="factures"]').hidden) renderFactures();
+    if(wantInv && newId != null){ const sv = (sales || []).find(x => String(x.id) === String(newId)); if(sv){ if(client && !sv.client) sv.client = client; invoiceForSale(sv); } }
+  });
+  if(editing) $('sl-del').addEventListener('click', async () => {
+    if(invoiceFor('vente_manuelle', sale.id)){ toast('Vente facturée : émets d\'abord un avoir (onglet Factures)', true); return; }
+    if(!confirm('Supprimer cette vente de ' + eur(Number(sale.amount)) + ' ?' + (sale.stock_deducted ? '\nLe stock sera remis.' : ''))) return;
+    const { error } = await sb.rpc('delete_manual_sale', { p_id: sale.id });
+    if(error){ toast('Erreur, réessaie', true); return; }
+    closeSheet(); toast('Vente supprimée'); await loadSales(); loadStock(true);
+  });
+}
+
+// Corriger le montant / le coût d'une commande du site
+function siteOrderSheet(o){
+  if(!o) return;
+  const liveCost = itemsCostLive(o.items_json);
+  openSheet(`<h3>Commande site — ${esc(o.customer_name || '')}</h3>
+    <p class="muted" style="margin-bottom:12px;">${orderLines(o).map(l => (l.grams != null ? l.grams + ' g ' : '') + esc(l.name)).join(', ')}</p>
+    <div class="field"><label>Montant réellement encaissé (€)</label><input id="so-amount" type="number" inputmode="decimal" step="0.01" min="0" value="${orderTotal(o).toFixed(2)}"></div>
+    <div class="field"><label>Coût d'achat HT (€) ${liveCost != null ? '— calculé : ' + eur(liveCost) : ''}</label><input id="so-cost" type="number" inputmode="decimal" step="0.01" min="0" value="${o.cost_total != null ? Number(o.cost_total).toFixed(2) : (liveCost != null ? liveCost.toFixed(2) : '')}" placeholder="Laisse vide si tu ne sais pas"></div>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="so-ok">Enregistrer</button></div>
+    <button class="btn danger" style="width:100%; margin-top:12px;" id="so-test">Commande test — retirer des chiffres</button>`);
+  $('so-test').addEventListener('click', async () => {
+    if(!confirm('Retirer cette commande de ' + eur(orderTotal(o)) + ' des chiffres ? Elle passera en « Annulée ».')) return;
+    const { error } = await sb.from('orders').update({ status: 'annulee' }).eq('id', o.id);
+    if(error){ toast('Erreur, réessaie', true); return; }
+    o.status = 'annulee'; closeSheet(); toast('Commande retirée des chiffres'); renderOrders(); renderStats();
+  });
+  $('so-ok').addEventListener('click', async () => {
+    const amount = num($('so-amount').value), cost = num($('so-cost').value);
+    if(amount == null){ toast('Indique le montant', true); return; }
+    const { error } = await sb.from('orders').update({ total: amount, cost_total: cost }).eq('id', o.id);
+    if(error){ toast(/cost_total/.test(error.message || '') ? 'Lance d\'abord ventes-setup.sql' : 'Erreur, réessaie', true); return; }
+    Object.assign(o, { total: amount, cost_total: cost }); closeSheet(); toast('Commande corrigée'); renderStats();
+  });
+}
+
+// Cotisations + TVA sur achats (micro-entreprise) — gardés sur ce téléphone
+function readPct(key, def){
+  try{ const v = parseFloat(localStorage.getItem(key)); if(!isNaN(v) && v >= 0 && v < 100) return v; }catch(e){}
+  return def;
+}
+function taxRate(){ return readPct('sh_tax_rate', 12.3); }
+function vatRate(){ return readPct('sh_vat_rate', 20); }
+function vatMul(){ return 1 + vatRate() / 100; }
+function ttc(c){ return c == null ? null : Math.round(c * vatMul() * 100) / 100; }
+$('open-tax').addEventListener('click', () => {
+  openSheet(`<h3>Cotisations et TVA</h3>
+    <div class="field"><label>Cotisations sur le chiffre d'affaires (%)</label><input id="tax-in" type="number" inputmode="decimal" step="0.1" min="0" max="99" value="${taxRate()}"></div>
+    <div class="chips" id="tax-chips"><button class="chip" data-v="12.3">12,3 %</button><button class="chip" data-v="13.3">+ 1 % libératoire</button><button class="chip" data-v="13.4">+ 0,1 % formation</button></div>
+    <div class="field" style="margin-top:6px;"><label>TVA payée sur tes achats, non récupérable (%)</label><input id="vat-in" type="number" inputmode="decimal" step="0.1" min="0" max="99" value="${vatRate()}"></div>
+    <p class="muted" style="margin-bottom:12px;">En micro-entreprise (franchise de TVA), tu ne récupères pas la TVA : elle s'ajoute à ton coût d'achat. Tes prix d'achat restent saisis HT. Mets 0 si un jour tu récupères la TVA.</p>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="tax-ok">Enregistrer</button></div>`);
+  $('tax-chips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if(c) $('tax-in').value = c.dataset.v; });
+  $('tax-ok').addEventListener('click', () => {
+    const t = num($('tax-in').value), v = num($('vat-in').value);
+    if(t == null || t < 0 || t >= 100 || v == null || v < 0 || v >= 100){ toast('Taux invalide', true); return; }
+    try{ localStorage.setItem('sh_tax_rate', String(t)); localStorage.setItem('sh_vat_rate', String(v)); }catch(e){}
+    closeSheet(); toast('Enregistré'); renderStock(); renderStats();
+  });
+});
+
+// Prix d'achat de tous les produits d'un coup
+function costsSheet(){
+  if(!products.length){ toast('Produits introuvables : lance supabase-setup.sql', true); return; }
+  openSheet(`<h3>Prix d'achat HT au gramme</h3>
+    <p class="muted" style="margin-bottom:10px;">Le prix HT de ton fournisseur pour 1 g. La TVA (${String(vatRate()).replace('.', ',')} %) est ajoutée automatiquement dans le calcul de la marge.</p>
+    <div id="costs-list">${products.map(p => `<div class="cost-row"><span>${esc(p.name)}<br><span class="muted">vente ${eur(Number(p.base_price))}/g</span></span>
+      <input type="number" inputmode="decimal" step="0.01" min="0" data-pid="${esc(p.id)}" value="${Number(p.cost_per_gram) ? Number(p.cost_per_gram).toFixed(2) : ''}" placeholder="€/g"></div>`).join('')}</div>
+    <label class="check" style="margin-top:12px;"><input type="checkbox" id="costs-fill"> Recalculer aussi la marge des ventes passées qui n'ont pas de coût</label>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="costs-ok">Enregistrer</button></div>`);
+  $('costs-ok').addEventListener('click', async () => {
+    $('costs-ok').disabled = true;
+    const inputs = [...document.querySelectorAll('#costs-list input')];
+    for(const i of inputs){
+      const v = num(i.value); const p = products.find(x => x.id === i.dataset.pid);
+      if(v == null || !p || v === Number(p.cost_per_gram)) continue;
+      const { error } = await sb.from('products').update({ cost_per_gram: v, updated_at: new Date().toISOString() }).eq('id', p.id);
+      if(error){ $('costs-ok').disabled = false; toast('Erreur sur ' + p.name, true); return; }
+      p.cost_per_gram = v;
+    }
+    if($('costs-fill').checked){
+      for(const o of orders.filter(o => o.status === 'terminee' && o.cost_total == null && o.items_json)){
+        const c = itemsCostLive(o.items_json); if(c == null) continue;
+        await sb.from('orders').update({ cost_total: c }).eq('id', o.id); o.cost_total = c;
+      }
+      for(const sv of (sales || []).filter(x => x.cost_amount == null && x.items_json)){
+        const c = itemsCostLive(sv.items_json); if(c == null) continue;
+        await sb.from('manual_sales').update({ cost_amount: c }).eq('id', sv.id); sv.cost_amount = c;
+      }
+    }
+    closeSheet(); toast("Prix d'achat enregistrés"); renderStock(); renderStats();
+  });
+}
+$('open-costs').addEventListener('click', costsSheet);
+$('open-costs-2').addEventListener('click', costsSheet);
+$('add-sale-btn').addEventListener('click', () => saleSheet(null));
+
+/* ---------- factures, encaissements, livre des recettes ---------- */
+let factures = [], entreprise = null, facMonthOffset = 0;
+const PAY_LONG = { especes:'Espèces', carte:'Carte bancaire', virement:'Virement', credit:'Crédit (à encaisser)', autre:'Autre' };
+const nf = (n, d = 2) => { // nombre FR sans espace insécable (compatible PDF/CSV)
+  const s = Math.abs(n).toFixed(d).split('.'); s[0] = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return (n < 0 ? '-' : '') + s.join(',');
+};
+const frDate = (k) => { if(!k) return ''; const [y, m, d] = String(k).slice(0, 10).split('-'); return d + '/' + m + '/' + y; };
+
+async function loadFactures(){
+  const [f, e] = await Promise.all([
+    sb.from('factures').select('*').order('id', { ascending: false }).limit(3000),
+    sb.from('entreprise').select('*').eq('id', 1).maybeSingle()
+  ]);
+  if(f.error){ factures = null; } else factures = f.data || [];
+  entreprise = e.data || null;
+  const b = await sb.from('factures_brouillons').select('*').order('updated_at', { ascending: false });
+  drafts = b.error ? null : (b.data || []);
+  if(!document.querySelector('[data-view="factures"]').hidden) renderFactures();
+}
+// facture active (non annulée) liée à une commande / vente
+function invoiceFor(source, ref){
+  if(!factures) return null;
+  return factures.find(f => f.type === 'facture' && f.source === source && String(f.source_ref) === String(ref)
+    && !factures.some(a => a.type === 'avoir' && a.facture_origine === f.numero)) || null;
+}
+function isCancelled(f){ return (factures || []).some(a => a.type === 'avoir' && a.facture_origine === f.numero); }
+
+/* ----- éditeur de facture : brouillon modifiable, puis validation définitive ----- */
+let drafts = [];
+function draftFor(source, ref){ return (drafts || []).find(d => d.source === source && String(d.source_ref) === String(ref)) || null; }
+function invoiceEditor(opts){
+  if(factures === null){ toast('Lance d\'abord factures-setup.sql dans Supabase', true); return; }
+  if(!entreprise || !entreprise.nom_legal || !entreprise.adresse){ toast('Renseigne d\'abord tes infos entreprise', true); entrepriseSheet(); return; }
+  const dr = opts.draft || null;
+  const c = (dr ? dr.client : opts.client) || {};
+  const lignes0 = dr ? dr.lignes : opts.lignes;
+  const mode0 = dr ? dr.mode_paiement : opts.mode;
+  const dv0 = dr ? dr.date_vente : opts.date_vente;
+  openSheet(`<h3>${dr ? 'Brouillon' : 'Facture'} — ${esc(opts.title || c.nom || '')}</h3>
+    ${dr ? '<p class="muted" style="margin-bottom:10px;">Brouillon modifiable : aucun numéro attribué tant que tu ne valides pas.</p>' : ''}
+    <div class="field"><label>Client (nom et prénom ou raison sociale)</label><input id="iv-nom" value="${esc(c.nom || '')}" placeholder="Client particulier"></div>
+    <div class="field"><label>Adresse du client</label><input id="iv-adr" value="${esc(c.adresse || '')}" placeholder="Rue, code postal, ville"></div>
+    <label class="check"><input type="checkbox" id="iv-pro" ${c.pro ? 'checked' : ''}> Client professionnel</label>
+    <div id="iv-pro-box" ${c.pro ? '' : 'hidden'}>
+      <div class="field"><label>SIREN du client</label><input id="iv-siren" inputmode="numeric" maxlength="14" value="${esc(c.siren || '')}" placeholder="9 chiffres"></div>
+      <div class="field"><label>Adresse de livraison (si différente)</label><input id="iv-livr" value="${esc(c.adresse_livraison || '')}"></div>
+      <p class="muted" style="margin:-4px 0 12px;">Échéance à ${entreprise.delai_paiement_pro} jours, pénalités de retard et indemnité de 40 € ajoutées automatiquement.</p>
+    </div>
+    <div class="field"><label>Date de la vente</label><input id="iv-dv" type="date" value="${dv0 || dkey(new Date())}" max="${dkey(new Date())}"></div>
+    <div class="field"><label>Lignes (désignation · quantité en g · montant €)</label><div id="iv-lines"></div>
+      <button class="btn ghost" type="button" id="iv-add" style="width:100%;">+ Ajouter une ligne</button></div>
+    <div class="row" style="margin:6px 0 12px;"><span class="muted">Total (TVA non applicable)</span><b class="mono" id="iv-total" style="color:var(--moss); font-size:18px;">0,00 €</b></div>
+    <div class="field"><label>Mode de paiement</label><div class="chips" id="iv-pay">${Object.entries(PAYMENTS).map(([v, l]) => `<button type="button" class="chip ${v === (mode0 || 'especes') ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}</div></div>
+    <p class="muted" id="iv-warn" style="color:var(--clay); margin-bottom:10px;"></p>
+    <button class="btn ghost" style="width:100%; margin-bottom:10px;" id="iv-preview">Aperçu PDF</button>
+    <div class="actions"><button class="btn" id="iv-draft">${dr ? 'Enregistrer' : 'Brouillon'}</button><button class="btn primary grow" id="iv-ok">Valider et émettre</button></div>
+    ${dr ? '<button class="btn danger" style="width:100%; margin-top:10px;" id="iv-del">Supprimer le brouillon</button>' : ''}`);
+  const addLine = (l = {}) => {
+    const row = document.createElement('div'); row.className = 'iv-line';
+    row.innerHTML = `<input class="iv-d" value="${esc(l.designation || '')}" placeholder="ex : Fleur de CBD OG Kush">
+      <input class="iv-q" type="number" inputmode="decimal" step="0.01" min="0" value="${l.quantite != null ? l.quantite : ''}" placeholder="g">
+      <input class="iv-t" type="number" inputmode="decimal" step="0.01" min="0" value="${l.total != null ? Number(l.total).toFixed(2) : ''}" placeholder="€">
+      <button type="button" aria-label="Retirer">×</button>`;
+    row.querySelector('button').addEventListener('click', () => { row.remove(); upd(); });
+    row.querySelectorAll('input').forEach(i => i.addEventListener('input', upd));
+    $('iv-lines').appendChild(row);
+  };
+  const read = () => [...document.querySelectorAll('#iv-lines .iv-line')].map(r => ({
+    designation: r.querySelector('.iv-d').value.trim(), quantite: num(r.querySelector('.iv-q').value), unite: 'g', total: num(r.querySelector('.iv-t').value)
+  })).filter(l => l.designation || l.quantite || l.total);
+  const upd = () => {
+    const t = read().reduce((a, l) => a + (l.total || 0), 0);
+    $('iv-total').textContent = eur(t);
+    $('iv-warn').textContent = opts.expected != null && Math.abs(t - opts.expected) > 0.005 ? 'Attention : le total diffère du montant encaissé (' + eur(opts.expected) + ').' : '';
+  };
+  (lignes0 && lignes0.length ? lignes0 : [{}]).forEach(addLine); upd();
+  $('iv-add').addEventListener('click', () => addLine());
+  $('iv-pro').addEventListener('change', () => { $('iv-pro-box').hidden = !$('iv-pro').checked; });
+  $('iv-pay').addEventListener('click', (e) => { const ch = e.target.closest('.chip'); if(ch) document.querySelectorAll('#iv-pay .chip').forEach(x => x.classList.toggle('on', x === ch)); });
+
+  // strict = contrôles complets (validation) ; sinon on enregistre tel quel (brouillon)
+  const collect = (strict) => {
+    const lignes = read();
+    const pro = $('iv-pro').checked, siren = $('iv-siren').value.replace(/\s/g, '');
+    if(strict){
+      if(!lignes.length || lignes.some(l => !l.designation || !(l.quantite > 0) || l.total == null || l.total < 0)){ toast('Chaque ligne doit avoir une désignation, une quantité et un montant', true); return null; }
+      if(pro && !/^\d{9}(\d{5})?$/.test(siren)){ toast('SIREN du client invalide (9 chiffres)', true); return null; }
+      if(pro && !$('iv-adr').value.trim()){ toast('Adresse du client obligatoire pour un pro', true); return null; }
+    }
+    const client = { nom: $('iv-nom').value.trim() || (strict ? 'Client particulier' : ''), adresse: $('iv-adr').value.trim(), pro };
+    if(pro){ client.siren = siren; if($('iv-livr').value.trim()) client.adresse_livraison = $('iv-livr').value.trim(); }
+    return { client, lignes, date_vente: $('iv-dv').value || null, mode_paiement: document.querySelector('#iv-pay .chip.on').dataset.v };
+  };
+  const saveDraft = async (d) => {
+    if(drafts === null){ toast('Lance d\'abord brouillons-setup.sql dans Supabase', true); return null; }
+    const row = Object.assign({ source: opts.source, source_ref: opts.ref != null ? String(opts.ref) : null, updated_at: new Date().toISOString() }, d);
+    const existing = dr || draftFor(opts.source, opts.ref);
+    const q = existing ? sb.from('factures_brouillons').update(row).eq('id', existing.id).select().single()
+                       : sb.from('factures_brouillons').insert(row).select().single();
+    const { data, error } = await q;
+    if(error){ toast('Erreur sur le brouillon, réessaie', true); console.error(error); return null; }
+    return data;
+  };
+
+  $('iv-preview').addEventListener('click', () => {
+    const d = collect(false); if(!d) return;
+    const today = dkey(new Date()), pro = d.client.pro;
+    const due = new Date(); due.setDate(due.getDate() + Number(entreprise.delai_paiement_pro || 30));
+    invoicePdf({ numero: 'BROUILLON', type: 'facture', brouillon: true, date_emission: today, date_vente: d.date_vente || today,
+      client: Object.assign({}, d.client, { nom: d.client.nom || 'Client particulier' }),
+      lignes: d.lignes.map(l => ({ ...l, quantite: l.quantite || 0, total: l.total || 0, prix_unitaire: l.quantite ? (l.total || 0) / l.quantite : 0 })),
+      total: d.lignes.reduce((a, l) => a + (l.total || 0), 0), mode_paiement: d.mode_paiement, date_echeance: pro ? dkey(due) : null, emetteur: entreprise });
+  });
+  $('iv-draft').addEventListener('click', async () => {
+    const d = collect(false); if(!d) return;
+    $('iv-draft').disabled = true;
+    const saved = await saveDraft(d);
+    $('iv-draft').disabled = false;
+    if(!saved) return;
+    closeSheet(); toast('Brouillon enregistré'); await loadFactures(); renderOrders();
+  });
+  if($('iv-del')) $('iv-del').addEventListener('click', async () => {
+    if(!confirm('Supprimer ce brouillon ?')) return;
+    const { error } = await sb.from('factures_brouillons').delete().eq('id', dr.id);
+    if(error){ toast('Erreur, réessaie', true); return; }
+    closeSheet(); toast('Brouillon supprimé'); await loadFactures(); renderOrders();
+  });
+  $('iv-ok').addEventListener('click', async () => {
+    const d = collect(true); if(!d) return;
+    if(!confirm('Valider et émettre la facture ? Un numéro sera attribué et elle ne sera plus modifiable.')) return;
+    $('iv-ok').disabled = true;
+    let res;
+    const existing = dr || draftFor(opts.source, opts.ref);
+    if(existing){
+      const saved = await saveDraft(d); if(!saved){ $('iv-ok').disabled = false; return; }
+      res = await sb.rpc('valider_brouillon', { p_id: saved.id });
+    } else {
+      res = await sb.rpc('emettre_facture', { p_source: opts.source, p_source_ref: opts.ref != null ? String(opts.ref) : null,
+        p_client: d.client, p_lignes: d.lignes, p_date_vente: d.date_vente, p_mode_paiement: d.mode_paiement });
+    }
+    const { data, error } = res;
+    if(error){
+      $('iv-ok').disabled = false;
+      const m = error.message || '';
+      toast(/DEJA_FACTUREE/.test(m) ? 'Déjà facturée' : /ENTREPRISE_INCOMPLETE/.test(m) ? 'Infos entreprise incomplètes' : /CLIENT/.test(m) ? 'Nom du client manquant' : 'Erreur, réessaie', true);
+      console.error(error); return;
+    }
+    const row = Array.isArray(data) ? data[0] : data;
+    closeSheet(); toast('Facture ' + row.numero + ' émise');
+    await loadFactures(); renderOrders();
+    const f = factures.find(x => x.numero === row.numero); if(f) invoiceSheet(f);
+  });
+}
+
+// Pré-remplissage depuis une commande du site
+function invoiceForOrder(o){
+  const ex = invoiceFor('commande', o.id); if(ex){ invoiceSheet(ex); return; }
+  const dr = draftFor('commande', o.id); if(dr){ invoiceEditor({ title: o.customer_name, source: 'commande', ref: o.id, draft: dr, expected: orderTotal(o) }); return; }
+  const total = orderTotal(o); let lignes;
+  const ogifts = o.offert_json || {};
+  const paidItems = o.items_json ? Object.fromEntries(Object.entries(o.items_json).map(([pid, gr]) => [pid, Math.round((Number(gr) - (Number(ogifts[pid]) || 0)) * 100) / 100]).filter(([, gr]) => gr > 0.001)) : null;
+  if(paidItems && Object.keys(paidItems).length){
+    const raw = Object.entries(paidItems).map(([pid, gr]) => ({ pid, gr: Number(gr), v: rate(pid, Number(gr)) * Number(gr) }));
+    const sum = raw.reduce((a, r) => a + r.v, 0) || 1; let acc = 0;
+    lignes = raw.map((r, i) => {
+      const t = i === raw.length - 1 ? Math.round((total - acc) * 100) / 100 : Math.round(total * r.v / sum * 100) / 100; acc += t;
+      return { designation: designationFor(r.pid), quantite: r.gr, total: t };
+    });
+  } else lignes = [{ designation: 'Produits CBD (' + String(o.items || '').split('—')[0].trim() + ')', quantite: 1, total }];
+  Object.entries(ogifts).forEach(([pid, gr]) => lignes.push({ designation: designationFor(pid) + ' — offert (ticket +' + (o.bonus_pct || '') + ' %)', quantite: Number(gr), total: 0 }));
+  invoiceEditor({ title: o.customer_name || 'commande site', source: 'commande', ref: o.id, client: { nom: o.customer_name, adresse: o.address },
+    lignes, date_vente: dkey(new Date(o.completed_at || o.created_at)), mode: o.payment || 'especes', expected: total });
+}
+// Pré-remplissage depuis une vente hors site
+function invoiceForSale(sv){
+  const ex = invoiceFor('vente_manuelle', sv.id); if(ex){ invoiceSheet(ex); return; }
+  const dr = draftFor('vente_manuelle', sv.id); if(dr){ invoiceEditor({ title: sv.client || sv.note, source: 'vente_manuelle', ref: sv.id, draft: dr, expected: Number(sv.amount) }); return; }
+  const total = Number(sv.amount); let lignes;
+  const gifts = sv.offert_json || {};
+  const items = sv.items_json ? Object.entries(sv.items_json).map(([pid, gr]) => [pid, Math.round((Number(gr) - (Number(gifts[pid]) || 0)) * 100) / 100]).filter(([, gr]) => gr > 0.001) : [];
+  if(items.length === 1) lignes = [{ designation: designationFor(items[0][0]), quantite: Number(items[0][1]), total }];
+  else if(items.length > 1){
+    const raw = items.map(([pid, gr]) => ({ pid, gr: Number(gr), v: rate(pid, Number(gr)) * Number(gr) }));
+    const sum = raw.reduce((a, r) => a + r.v, 0) || 1; let acc = 0;
+    lignes = raw.map((r, i) => { const t = i === raw.length - 1 ? Math.round((total - acc) * 100) / 100 : Math.round(total * r.v / sum * 100) / 100; acc += t; return { designation: designationFor(r.pid), quantite: r.gr, total: t }; });
+  } else lignes = [{ designation: 'Produits CBD', quantite: 1, total }];
+  Object.entries(gifts).forEach(([pid, gr]) => lignes.push({ designation: designationFor(pid) + ' — offert (fidélité' + (sv.points_utilises ? ', ' + sv.points_utilises + ' pts' : '') + ')', quantite: Number(gr), total: 0 }));
+  invoiceEditor({ title: sv.client || sv.note || 'vente hors site', source: 'vente_manuelle', ref: sv.id, client: { nom: sv.client || '' },
+    lignes, date_vente: sv.sale_date, mode: sv.payment, expected: total });
+}
+function designationFor(pid){
+  const p = products.find(x => x.id === pid);
+  return (p && p.category === 'resine' ? 'Résine de CBD ' : p && p.category === 'fleur' ? 'Fleur de CBD ' : 'CBD ') + pname(pid);
+}
+
+/* ----- fiche d'une facture émise ----- */
+function invoiceSheet(f){
+  const cancelled = f.type === 'facture' && isCancelled(f);
+  openSheet(`<h3>${f.type === 'avoir' ? 'Avoir' : 'Facture'} ${esc(f.numero)}</h3>
+    <p class="muted" style="margin-bottom:10px;">Émise le ${frDate(f.date_emission)} · vente du ${frDate(f.date_vente)}${f.facture_origine ? ' · annule ' + esc(f.facture_origine) : ''}${cancelled ? ' · <b style="color:var(--red);">annulée par avoir</b>' : ''}</p>
+    <div class="card"><b>${esc(f.client.nom || '')}</b>${f.client.pro ? ' <span class="tag">Pro</span>' : ''}<div class="muted">${esc(f.client.adresse || '')}</div>
+      <ul class="o-items">${f.lignes.map(l => `<li><span>${esc(l.designation)} · ${nf(Number(l.quantite), 2)} ${esc(l.unite || 'g')}</span><span class="mono">${eur(Number(l.total))}</span></li>`).join('')}</ul>
+      <div class="o-total">${eur(Number(f.total))}</div><div class="muted">${esc(PAY_LONG[f.mode_paiement] || f.mode_paiement || '')}</div></div>
+    <button class="btn primary" style="width:100%; margin-bottom:10px;" id="if-pdf">Télécharger le PDF</button>
+    ${f.type === 'facture' && !cancelled ? '<button class="btn danger" style="width:100%;" id="if-avoir">Annuler par un avoir</button>' : ''}
+    <p class="muted" style="margin-top:10px;">Une facture émise ne peut plus être modifiée. En cas d'erreur, émets un avoir puis une nouvelle facture.</p>`);
+  $('if-pdf').addEventListener('click', () => invoicePdf(f));
+  if($('if-avoir')) $('if-avoir').addEventListener('click', async () => {
+    const motif = prompt('Motif de l\'avoir (ex : erreur de montant, retour produit) :'); if(motif === null) return;
+    const { data, error } = await sb.rpc('emettre_avoir', { p_facture: f.id, p_motif: motif });
+    if(error){ toast('Erreur, réessaie', true); console.error(error); return; }
+    const row = Array.isArray(data) ? data[0] : data;
+    closeSheet(); toast('Avoir ' + row.numero + ' émis'); await loadFactures(); renderOrders();
+  });
+}
+
+/* ----- PDF ----- */
+/* Mini générateur PDF (A4, Helvetica, WinAnsi) — sans dépendance externe */
+const HELV_W = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,556,222,556,333,1000,556,556,333,1000,667,333,1000,556,611,556,556,222,222,333,333,350,556,1000,333,1000,500,333,944,556,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500];
+const HELVB_W = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,556,278,556,500,1000,556,556,333,1000,667,333,1000,556,611,556,556,278,278,500,500,350,556,1000,333,1000,556,333,944,556,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556];
+const CP1252 = {0x20AC:0x80,0x201A:0x82,0x0192:0x83,0x201E:0x84,0x2026:0x85,0x2020:0x86,0x2021:0x87,0x02C6:0x88,0x2030:0x89,0x0160:0x8A,0x2039:0x8B,0x0152:0x8C,0x017D:0x8E,0x2018:0x91,0x2019:0x92,0x201C:0x93,0x201D:0x94,0x2022:0x95,0x2013:0x96,0x2014:0x97,0x02DC:0x98,0x2122:0x99,0x0161:0x9A,0x203A:0x9B,0x0153:0x9C,0x017E:0x9E,0x0178:0x9F,0x202F:0x20,0x2009:0x20};
+function MiniPDF(){
+  this.k = 72 / 25.4; this.H = 841.89; this.W = 595.28; this.ops = [];
+  this.bold = false; this.size = 10; this.tc = [0, 0, 0]; this.dc = [0, 0, 0]; this.fc = [0, 0, 0];
+}
+MiniPDF.prototype.bytes = function(s){
+  const out = []; for(const ch of String(s)){ const c = ch.codePointAt(0);
+    if(c < 128) out.push(c); else if(c >= 160 && c <= 255) out.push(c); else if(CP1252[c] != null) out.push(CP1252[c]); else out.push(63); }
+  return out;
+};
+MiniPDF.prototype.width = function(s, bold, size){ // en mm
+  const w = (bold == null ? this.bold : bold) ? HELVB_W : HELV_W; let t = 0;
+  this.bytes(s).forEach(b => t += w[b] || 0); return t / 1000 * (size || this.size) / this.k;
+};
+MiniPDF.prototype.setFont = function(_f, style){ this.bold = style === 'bold'; };
+MiniPDF.prototype.setFontSize = function(s){ this.size = s; };
+const col = (a) => a.length === 1 ? [a[0], a[0], a[0]] : a;
+MiniPDF.prototype.setTextColor = function(...a){ this.tc = col(a); };
+MiniPDF.prototype.setDrawColor = function(...a){ this.dc = col(a); };
+MiniPDF.prototype.setFillColor = function(...a){ this.fc = col(a); };
+const c3 = (a) => a.map(v => (v / 255).toFixed(3)).join(' ');
+MiniPDF.prototype.esc = function(s){
+  return this.bytes(s).map(b => b === 40 || b === 41 || b === 92 ? '\\' + String.fromCharCode(b) : b < 32 || b > 126 ? '\\' + b.toString(8).padStart(3, '0') : String.fromCharCode(b)).join('');
+};
+MiniPDF.prototype.text = function(t, x, y, opt){
+  const lines = Array.isArray(t) ? t : [t], lh = this.size * 1.15 / this.k;
+  lines.forEach((s, i) => {
+    let xx = x; const w = this.width(s);
+    if(opt && opt.align === 'right') xx = x - w; else if(opt && opt.align === 'center') xx = x - w / 2;
+    this.ops.push(c3(this.tc) + ' rg BT /' + (this.bold ? 'F2' : 'F1') + ' ' + this.size + ' Tf ' + (xx * this.k).toFixed(2) + ' ' + (this.H - (y + i * lh) * this.k).toFixed(2) + ' Td (' + this.esc(s) + ') Tj ET');
+  });
+};
+MiniPDF.prototype.splitTextToSize = function(t, maxW){
+  const out = []; String(t).split('\n').forEach(par => {
+    let line = ''; par.split(' ').forEach(word => {
+      const tryL = line ? line + ' ' + word : word;
+      if(this.width(tryL) <= maxW || !line) line = tryL; else { out.push(line); line = word; }
+    }); out.push(line);
+  }); return out;
+};
+MiniPDF.prototype.rect = function(x, y, w, h, style){
+  const r = (x * this.k).toFixed(2) + ' ' + (this.H - (y + h) * this.k).toFixed(2) + ' ' + (w * this.k).toFixed(2) + ' ' + (h * this.k).toFixed(2) + ' re';
+  this.ops.push(style === 'F' ? c3(this.fc) + ' rg ' + r + ' f' : c3(this.dc) + ' RG 0.6 w ' + r + ' S');
+};
+MiniPDF.prototype.roundedRect = function(x, y, w, h){ this.rect(x, y, w, h); };
+MiniPDF.prototype.line = function(x1, y1, x2, y2){
+  this.ops.push(c3(this.dc) + ' RG 0.5 w ' + (x1 * this.k).toFixed(2) + ' ' + (this.H - y1 * this.k).toFixed(2) + ' m ' + (x2 * this.k).toFixed(2) + ' ' + (this.H - y2 * this.k).toFixed(2) + ' l S');
+};
+MiniPDF.prototype.build = function(title){
+  const content = this.ops.join('\n');
+  const objs = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + this.W + ' ' + this.H + '] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
+    '<< /Length ' + content.length + ' >>\nstream\n' + content + '\nendstream',
+    '<< /Title (' + this.esc(title || '') + ') /Producer (Smok\'house admin) >>'
+  ];
+  let pdf = '%PDF-1.4\n'; const offs = [];
+  objs.forEach((o, i) => { offs.push(pdf.length); pdf += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
+  const x = pdf.length;
+  pdf += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('');
+  pdf += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R /Info 7 0 R >>\nstartxref\n' + x + '\n%%EOF';
+  return new Blob([pdf], { type: 'application/pdf' });
+};
+MiniPDF.prototype.save = function(name){
+  const blob = this.build(name.replace(/\.pdf$/, ''));
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 4000);
+};
+
+async function invoicePdf(f, returnDoc){
+  const doc = new MiniPDF();
+  const E = f.emetteur || {}, C = f.client || {}, W = 210, M = 18;
+  const avoir = f.type === 'avoir';
+  let y = 20;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.text(E.nom_commercial || "Smok'house", M, y);
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); y += 6;
+  [ (E.nom_legal || '') + ' — Entrepreneur individuel (EI)', E.adresse || '', ((E.code_postal || '') + ' ' + (E.ville || '')).trim(),
+    'SIRET : ' + (E.siret || ''), [E.telephone, E.email].filter(Boolean).join(' · ') ].filter(Boolean).forEach(t => { doc.text(t, M, y); y += 4.5; });
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
+  doc.text(f.brouillon ? 'BROUILLON DE FACTURE' : (avoir ? 'AVOIR' : 'FACTURE') + ' N° ' + f.numero, W - M, 20, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+  let ry = 27;
+  [ 'Date d\'émission : ' + frDate(f.date_emission), 'Date de la vente : ' + frDate(f.date_vente),
+    avoir ? 'Annule la facture N° ' + f.facture_origine : null ].filter(Boolean).forEach(t => { doc.text(t, W - M, ry, { align: 'right' }); ry += 5; });
+
+  // client
+  y = Math.max(y, ry) + 8;
+  const bx = W / 2 + 2, bw = W / 2 - M - 2;
+  doc.setDrawColor(200); doc.roundedRect(bx, y - 5, bw, C.pro ? 30 : 22, 2, 2);
+  doc.setFontSize(8); doc.setTextColor(110); doc.text('CLIENT', bx + 4, y); doc.setTextColor(0);
+  doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.text(String(C.nom || 'Client particulier'), bx + 4, y + 5.5);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+  let cy = y + 10.5;
+  doc.splitTextToSize(String(C.adresse || ''), bw - 8).forEach(t => { doc.text(t, bx + 4, cy); cy += 4.5; });
+  if(C.pro && C.siren){ doc.text('SIREN : ' + C.siren, bx + 4, cy); cy += 4.5; }
+  if(C.adresse_livraison){ doc.splitTextToSize('Livraison : ' + C.adresse_livraison, bw - 8).forEach(t => { doc.text(t, bx + 4, cy); cy += 4.5; }); }
+  y = Math.max(y + (C.pro ? 30 : 22), cy) + 6;
+
+  doc.setFontSize(8.5); doc.setTextColor(90); doc.text('Nature de l\'opération : livraison de biens', M, y); doc.setTextColor(0); y += 6;
+
+  // tableau
+  const cols = [M, 118, 145, W - M];
+  doc.setFillColor(20, 23, 13); doc.rect(M, y - 4.5, W - 2 * M, 7, 'F');
+  doc.setTextColor(255); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+  doc.text('Désignation', M + 2, y); doc.text('Quantité', cols[1] + 22, y, { align: 'right' }); doc.text('Prix unitaire', cols[2] + 24, y, { align: 'right' }); doc.text('Montant', cols[3] - 2, y, { align: 'right' });
+  doc.setTextColor(0); doc.setFont('helvetica', 'normal'); y += 8;
+  f.lignes.forEach(l => {
+    const d = doc.splitTextToSize(String(l.designation), cols[1] - M - 4);
+    doc.text(d, M + 2, y);
+    doc.text(nf(Number(l.quantite), 2) + ' ' + (l.unite || 'g'), cols[1] + 22, y, { align: 'right' });
+    doc.text(nf(Number(l.prix_unitaire), 2) + ' €/' + (l.unite || 'g'), cols[2] + 24, y, { align: 'right' });
+    doc.text(nf(Number(l.total), 2) + ' €', cols[3] - 2, y, { align: 'right' });
+    y += 4.5 * d.length + 2.5; doc.setDrawColor(225); doc.line(M, y - 3, W - M, y - 3);
+  });
+  y += 3;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+  doc.text(avoir ? 'Total de l\'avoir' : 'Total à payer', 128, y); doc.text(nf(Number(f.total), 2) + ' €', W - M - 2, y, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); y += 5.5;
+  doc.text('TVA non applicable, art. 293 B du CGI', W - M - 2, y, { align: 'right' }); y += 10;
+
+  // paiement & mentions
+  doc.setFontSize(9);
+  const lines = [];
+  if(avoir && f.motif) lines.push('Motif de l\'avoir : ' + f.motif);
+  if(f.mode_paiement && f.mode_paiement !== 'credit') lines.push('Mode de paiement : ' + (PAY_LONG[f.mode_paiement] || f.mode_paiement) + (C.pro ? '' : ' — facture acquittée'));
+  if(f.mode_paiement === 'credit' && !C.pro) lines.push('Paiement : à régler.');
+  if(C.pro && !avoir){
+    lines.push('Date d\'échéance : ' + frDate(f.date_echeance) + ' (paiement à ' + (E.delai_paiement_pro || 30) + ' jours à compter de la date de facture).');
+    lines.push('Pas d\'escompte pour paiement anticipé.');
+    lines.push('En cas de retard de paiement, des pénalités sont exigibles au taux d\'intérêt appliqué par la Banque centrale européenne à son opération de refinancement la plus récente, majoré de 10 points (art. L441-10 du Code de commerce).');
+    lines.push('Indemnité forfaitaire pour frais de recouvrement en cas de retard de paiement : 40 € (art. D441-5 du Code de commerce).');
+  }
+  lines.forEach(t => { doc.splitTextToSize(t, W - 2 * M).forEach(s => { doc.text(s, M, y); y += 4.5; }); y += 1; });
+
+  if(f.brouillon){ doc.setFontSize(11); doc.setTextColor(200, 60, 40); doc.setFont('helvetica', 'bold');
+    doc.text('Document provisoire, non valable comme facture : numéro attribué à la validation.', W / 2, 272, { align: 'center' }); doc.setFont('helvetica', 'normal'); }
+  doc.setFontSize(7.5); doc.setTextColor(120);
+  doc.text((E.nom_legal || '') + ' EI — ' + (E.nom_commercial || '') + ' — SIRET ' + (E.siret || '') + ' — TVA non applicable, art. 293 B du CGI', W / 2, 287, { align: 'center' });
+  if(returnDoc) return doc;
+  const name = (f.brouillon ? 'brouillon-facture-' + dkey(new Date()) : f.numero) + '.pdf';
+  try{ doc.save(name); }catch(e){ window.open(URL.createObjectURL(doc.build(f.numero)), '_blank'); }
+}
+
+/* ----- infos entreprise ----- */
+function entrepriseSheet(){
+  const e = entreprise || {};
+  openSheet(`<h3>Infos entreprise (sur les factures)</h3>
+    <div class="field"><label>Ton nom légal (prénom NOM)</label><input id="en-nom" value="${esc(e.nom_legal || '')}" placeholder="ex : Timéo DUPONT"></div>
+    <div class="field"><label>Nom commercial</label><input id="en-com" value="${esc(e.nom_commercial || "Smok'house")}"></div>
+    <div class="field"><label>Adresse (n° et rue)</label><input id="en-adr" value="${esc(e.adresse || '')}"></div>
+    <div class="line-row" style="grid-template-columns:110px 1fr;"><input id="en-cp" value="${esc(e.code_postal || '43000')}" placeholder="CP"><input id="en-ville" value="${esc(e.ville || 'Le Puy-en-Velay')}" placeholder="Ville"></div>
+    <div class="field"><label>SIRET</label><input id="en-siret" inputmode="numeric" value="${esc(e.siret || '10317445400019')}"></div>
+    <div class="field"><label>Email</label><input id="en-mail" type="email" value="${esc(e.email || '')}"></div>
+    <div class="field"><label>Téléphone</label><input id="en-tel" type="tel" value="${esc(e.telephone || '')}"></div>
+    <div class="field"><label>Délai de paiement clients pros (jours, 60 max)</label><input id="en-delai" type="number" min="0" max="60" value="${e.delai_paiement_pro != null ? e.delai_paiement_pro : 30}"></div>
+    <p class="muted" style="margin-bottom:12px;">La mention « Entrepreneur individuel (EI) » et « TVA non applicable, art. 293 B du CGI » sont ajoutées automatiquement. Les factures déjà émises gardent les infos du jour de leur émission.</p>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="en-ok">Enregistrer</button></div>`);
+  $('en-ok').addEventListener('click', async () => {
+    const siret = $('en-siret').value.replace(/\s/g, ''), delai = parseInt($('en-delai').value, 10);
+    if(!$('en-nom').value.trim() || !$('en-adr').value.trim()){ toast('Nom légal et adresse obligatoires', true); return; }
+    if(!/^\d{14}$/.test(siret)){ toast('SIRET invalide (14 chiffres)', true); return; }
+    if(isNaN(delai) || delai < 0 || delai > 60){ toast('Délai entre 0 et 60 jours', true); return; }
+    const row = { id: 1, nom_legal: $('en-nom').value.trim(), nom_commercial: $('en-com').value.trim() || "Smok'house", adresse: $('en-adr').value.trim(),
+      code_postal: $('en-cp').value.trim(), ville: $('en-ville').value.trim(), siret, email: $('en-mail').value.trim(), telephone: $('en-tel').value.trim(),
+      delai_paiement_pro: delai, updated_at: new Date().toISOString() };
+    const { error } = await sb.from('entreprise').upsert(row);
+    if(error){ toast(/entreprise/.test(error.message || '') ? 'Lance d\'abord factures-setup.sql' : 'Erreur, réessaie', true); console.error(error); return; }
+    entreprise = row; closeSheet(); toast('Infos enregistrées'); renderFactures();
+  });
+}
+
+/* ----- encaissements (livre des recettes) ----- */
+function receipts(){
+  const list = [];
+  orders.filter(o => o.status === 'terminee' || isFrPaid(o)).forEach(o => {
+    const paid = o.paid_at || (o.payment === 'credit' ? null : dkey(new Date(o.completed_at || o.created_at)));
+    const inv = invoiceFor('commande', o.id);
+    list.push({ kind:'site', ref:o, id:String(o.id), date: paid, saleDate: dkey(new Date(o.completed_at || o.created_at)),
+      client: o.customer_name || 'Client particulier', nature: 'Vente de CBD (site) : ' + orderLines(o).map(l => (l.grams != null ? nf(l.grams, 2) + ' g ' : '') + l.name).join(', '),
+      amount: orderTotal(o), mode: o.payment || 'autre', facture: inv ? inv.numero : '' });
+  });
+  (sales || []).forEach(sv => {
+    const inv = invoiceFor('vente_manuelle', sv.id);
+    list.push({ kind:'manual', ref:sv, id:String(sv.id), date: sv.paid_at || (sv.payment === 'credit' ? null : sv.sale_date), saleDate: sv.sale_date,
+      client: sv.client || (sv.note && !/^\+|offert|pts|%|échantillon/i.test(sv.note) ? sv.note : '') || 'Client particulier',
+      nature: 'Vente de CBD : ' + (sv.items_json ? Object.entries(sv.items_json).map(([pid, gr]) => nf(Number(gr), 2) + ' g ' + pname(pid)).join(', ') : (sv.note || 'produits divers')),
+      amount: Number(sv.amount), mode: sv.payment || 'autre', facture: inv ? inv.numero : '' });
+  });
+  (factures || []).filter(f => f.type === 'avoir').forEach(f => {
+    list.push({ kind:'avoir', ref:f, id:String(f.id), date: f.date_emission, saleDate: f.date_emission, client: f.client.nom || '', nature: 'Avoir (remboursement) — annule ' + f.facture_origine + (f.motif ? ' : ' + f.motif : ''),
+      amount: Number(f.total), mode: f.mode_paiement || 'autre', facture: f.numero });
+  });
+  return list;
+}
+function facMonth(){
+  const now = new Date(), first = new Date(now.getFullYear(), now.getMonth() + facMonthOffset, 1);
+  return { first, key: first.getFullYear() + '-' + pad2(first.getMonth() + 1), label: first.toLocaleDateString('fr-FR', { month:'long', year:'numeric' }) };
+}
+function renderFactures(){
+  const M = facMonth();
+  $('fac-m-label').textContent = M.label; $('fac-m-next').disabled = facMonthOffset >= 0;
+  if(factures === null){ $('fac-list').innerHTML = '<div class="empty">Lance <b>factures-setup.sql</b> dans Supabase pour activer les factures.</div>'; return; }
+  $('fac-ent-warn').hidden = !!(entreprise && entreprise.nom_legal && entreprise.adresse);
+  const all = receipts();
+  const rec = all.filter(r => r.date && r.date.slice(0, 7) === M.key).sort((a, b) => a.date.localeCompare(b.date));
+  const tot = rec.reduce((a, r) => a + r.amount, 0);
+  $('fac-rec-sum').innerHTML = `<b style="color:var(--moss);">${eur(tot)}</b> encaissés · ${rec.length} ligne${rec.length > 1 ? 's' : ''} · ${rec.filter(r => !r.facture).length} sans facture`;
+  // crédits à encaisser
+  const due = all.filter(r => !r.date && r.kind !== 'avoir');
+  $('fac-credit-n').textContent = due.length;
+  $('fac-credits').innerHTML = due.map(r => `<div class="entry"><div>${esc(r.client)}<div class="muted">${frDate(r.saleDate)} · ${esc(r.nature.replace(/^Vente de CBD( \(site\))? : /, ''))}</div></div>
+    <div style="text-align:right;"><b class="mono">${eur(r.amount)}</b><br><button class="btn ghost" style="min-height:32px; padding:4px 10px; margin-top:4px; font-size:12px;" data-paid="${r.kind}:${esc(r.id)}">Encaissé</button></div></div>`).join('')
+    || '<div class="muted">Aucun crédit en attente 👌</div>';
+  // brouillons (tous mois confondus)
+  $('fac-draft-n').textContent = drafts ? drafts.length : 0;
+  $('fac-drafts').innerHTML = drafts === null ? '<div class="muted">Lance <b>brouillons-setup.sql</b> pour activer les brouillons.</div>'
+    : drafts.map(d => `<button class="day-row" data-draft="${d.id}"><div><div class="d" style="text-transform:none;">${esc((d.client && d.client.nom) || 'Client à préciser')}</div><div class="n">Modifié le ${frDate(String(d.updated_at).slice(0, 10))} · ${d.source === 'commande' ? 'commande site' : 'vente manuelle'}</div></div>
+      <div class="amt">${eur((d.lignes || []).reduce((a, l) => a + (Number(l.total) || 0), 0))}</div></button>`).join('') || '<div class="muted">Aucun brouillon.</div>';
+  // factures du mois
+  const fm = factures.filter(f => String(f.date_emission).slice(0, 7) === M.key);
+  $('fac-list').innerHTML = fm.map(f => `<button class="day-row" data-fac="${f.id}">
+      <div><div class="d" style="text-transform:none;">${esc(f.numero)} ${f.type === 'avoir' ? '<span class="tag">Avoir</span>' : isCancelled(f) ? '<span class="tag">Annulée</span>' : ''}</div><div class="n">${frDate(f.date_emission)} · ${esc(f.client.nom || '')}</div></div>
+      <div class="amt">${eur(Number(f.total))}</div></button>`).join('') || '<div class="muted">Aucune facture émise ce mois-ci.</div>';
+}
+function markPaidSheet(r){
+  openSheet(`<h3>Encaisser — ${esc(r.client)}</h3>
+    <p class="muted" style="margin-bottom:12px;">${eur(r.amount)} · vente du ${frDate(r.saleDate)}</p>
+    <div class="field"><label>Date d'encaissement</label><input id="pd-date" type="date" value="${dkey(new Date())}" max="${dkey(new Date())}"></div>
+    <div class="field"><label>Payé en</label><div class="chips" id="pd-pay">${['especes', 'carte', 'virement', 'autre'].map((v, i) => `<button type="button" class="chip ${i === 0 ? 'on' : ''}" data-v="${v}">${PAYMENTS[v]}</button>`).join('')}</div></div>
+    <div class="actions"><button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="pd-ok">Encaissé</button></div>`);
+  $('pd-pay').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if(c) document.querySelectorAll('#pd-pay .chip').forEach(x => x.classList.toggle('on', x === c)); });
+  $('pd-ok').addEventListener('click', async () => {
+    const d = $('pd-date').value || dkey(new Date()), mode = document.querySelector('#pd-pay .chip.on').dataset.v;
+    const table = r.kind === 'site' ? 'orders' : 'manual_sales';
+    const { error } = await sb.from(table).update({ paid_at: d, payment: mode }).eq('id', r.ref.id);
+    if(error){ toast(/paid_at/.test(error.message || '') ? 'Lance d\'abord factures-setup.sql' : 'Erreur, réessaie', true); return; }
+    Object.assign(r.ref, { paid_at: d, payment: mode }); closeSheet(); toast('Encaissement enregistré'); renderFactures(); renderStats();
+  });
+}
+
+/* ----- export CSV livre des recettes ----- */
+function exportRecettes(){
+  const M = facMonth();
+  const rec = receipts().filter(r => r.date && r.date.slice(0, 7) === M.key).sort((a, b) => a.date.localeCompare(b.date) || String(a.facture).localeCompare(String(b.facture)));
+  const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const rows = [['Date d\'encaissement', 'Client', 'Nature', 'Montant (€)', 'Mode de paiement', 'N° de facture']];
+  rec.forEach(r => rows.push([frDate(r.date), r.client, r.nature, nf(r.amount, 2).replace(/ /g, ''), PAY_LONG[r.mode] || r.mode, r.facture]));
+  rows.push(['', '', 'TOTAL ' + M.label, nf(rec.reduce((a, r) => a + r.amount, 0), 2).replace(/ /g, ''), '', '']);
+  const csv = '﻿' + rows.map(r => r.map(q).join(';')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'livre-recettes-' + M.key + '.csv';
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('Export ' + M.label + ' : ' + rec.length + ' lignes');
+}
+
+$('fac-m-prev').addEventListener('click', () => { facMonthOffset--; renderFactures(); });
+$('fac-m-next').addEventListener('click', () => { if(facMonthOffset < 0){ facMonthOffset++; renderFactures(); } });
+$('fac-csv').addEventListener('click', exportRecettes);
+$('fac-ent').addEventListener('click', entrepriseSheet);
+$('fac-ent-warn-btn').addEventListener('click', entrepriseSheet);
+$('fac-new-sale').addEventListener('click', () => saleSheet(null));
+$('fac-drafts').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-draft]'); if(!b) return;
+  const d = drafts.find(x => String(x.id) === b.dataset.draft); if(!d) return;
+  const o = d.source === 'commande' ? orders.find(x => String(x.id) === String(d.source_ref)) : null;
+  const sv = d.source === 'vente_manuelle' ? (sales || []).find(x => String(x.id) === String(d.source_ref)) : null;
+  invoiceEditor({ source: d.source, ref: d.source_ref, draft: d, expected: o ? orderTotal(o) : sv ? Number(sv.amount) : null });
+});
+$('fac-list').addEventListener('click', (e) => { const b = e.target.closest('[data-fac]'); if(b){ const f = factures.find(x => String(x.id) === b.dataset.fac); if(f) invoiceSheet(f); } });
+$('fac-credits').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-paid]'); if(!b) return;
+  const [kind, id] = b.dataset.paid.split(':');
+  const r = receipts().find(x => x.kind === kind && x.id === id); if(r) markPaidSheet(r);
+});
+
+/* ---------- service worker ---------- */
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+setInterval(() => { if(!$('view-app').hidden && !document.hidden) renderOrders(); }, 60000); // rafraîchit les "il y a X min"
+boot();
+
+  // Afficher / masquer le mot de passe
+  document.querySelectorAll('.pw-toggle').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var input = document.getElementById(btn.dataset.for);
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.classList.toggle('on', show);
+      btn.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+      input.focus();
+    });
+  });
+</script>
+</body>
+</html>

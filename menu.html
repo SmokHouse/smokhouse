@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Le menu — Smok'house CBD</title>
+<meta name="description" content="Le menu Smok'house : fleurs et résines CBD, commande au comptoir, livraison le jour même au Puy-en-Velay.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#11140D">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --slate:#151912; --slate-2:#1C2117; --slate-3:#252C1E;
+    --chalk:#EFEBDC; --chalk-soft:#B9B49E; --chalk-dim:#7F7B68;
+    --lime:#8FE24C; --lime-deep:#5B9A2E; --amber:#F0A94E; --red:#F26B5B;
+    --line:rgba(239,235,220,.14); --line-strong:rgba(239,235,220,.26);
+    --wood-1:#5A3B22; --wood-2:#7A5332; --wood-3:#3F2816;
+    --ink:#11140D;
+    --safe-bot:env(safe-area-inset-bottom);
+  }
+  *{margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{scroll-behavior:smooth;}
+  body{
+    min-height:100vh; color:var(--chalk); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.45;
+    background-color:#0E100B;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 15% 0%, rgba(239,235,220,.06), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(143,226,76,.05), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    padding-bottom:calc(110px + var(--safe-bot));
+  }
+  button{font:inherit; color:inherit; cursor:pointer; background:none; border:0;}
+  input,textarea{font:inherit; color:var(--chalk); background:rgba(0,0,0,.25); border:1px solid var(--line-strong); border-radius:8px; padding:12px; width:100%;}
+  input:focus,textarea:focus{outline:2px solid var(--lime); outline-offset:1px;}
+  a{color:inherit;}
+  [hidden]{display:none !important;}
+  .hand{font-family:'Caveat',cursive; font-weight:700; letter-spacing:.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- en-tête ---------- */
+  .top{max-width:860px; margin:0 auto; padding:18px 16px 8px; display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .logo{font-family:'Caveat',cursive; font-weight:700; font-size:32px; line-height:1; text-decoration:none;}
+  .logo span{color:var(--lime);}
+  .logo small{display:block; font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--chalk-dim); margin-top:4px;}
+  .who{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--chalk-soft); text-align:right;}
+  .pts{font-family:'IBM Plex Mono',monospace; color:var(--lime); border:1px solid rgba(143,226,76,.4); border-radius:20px; padding:4px 10px; font-size:12px; white-space:nowrap;}
+  .linkbtn{color:var(--chalk-soft); text-decoration:underline; text-underline-offset:3px; font-size:13px;}
+
+  /* ---------- ardoise avec cadre bois ---------- */
+  .board{
+    max-width:860px; margin:10px auto 0; position:relative;
+    background:linear-gradient(180deg, var(--slate-2), var(--slate));
+    border-radius:6px; padding:22px 18px 26px;
+    box-shadow:0 0 0 7px var(--wood-2), 0 0 0 9px var(--wood-3), 0 18px 50px rgba(0,0,0,.6), inset 0 0 60px rgba(0,0,0,.45);
+    background-image:
+      linear-gradient(180deg, rgba(255,255,255,.025), transparent 30%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
+  }
+  .board::before{ /* grain du bois (haut du cadre) */
+    content:""; position:absolute; left:-9px; right:-9px; top:-9px; height:9px; border-radius:6px 6px 0 0;
+    background:repeating-linear-gradient(90deg, var(--wood-1) 0 14px, var(--wood-2) 14px 22px, var(--wood-3) 22px 26px, var(--wood-2) 26px 40px);
+    opacity:.9;
+  }
+  @media (max-width:520px){ .board{margin:10px 12px 0; padding:18px 14px 22px;} }
+
+  /* ---------- menu du jour ---------- */
+  .special{border:2px dashed rgba(143,226,76,.45); border-radius:14px; padding:16px; margin-bottom:22px; position:relative; background:rgba(143,226,76,.04);}
+  .special-tag{position:absolute; top:-13px; left:16px; background:var(--slate-2); padding:0 8px; font-family:'Caveat',cursive; font-weight:700; font-size:22px; color:var(--lime); line-height:1.1;}
+  .special h2{font-family:'Caveat',cursive; font-weight:700; font-size:30px; line-height:1.05; margin:4px 0 6px;}
+  .special p{color:var(--chalk-soft); font-size:14px;}
+  .special .promo{display:inline-block; margin-top:10px; background:var(--amber); color:var(--ink); font-weight:600; font-size:13px; padding:5px 10px; border-radius:6px; transform:rotate(-1.2deg);}
+  .special .row-item{margin-top:12px; border-top:1px dashed var(--line); padding-top:12px;}
+
+  /* ---------- onglets catégories ---------- */
+  .cats{position:sticky; top:0; z-index:20; display:flex; gap:8px; padding:10px 14px; margin:0 -14px 6px; background:var(--slate-2); box-shadow:0 8px 12px -6px rgba(0,0,0,.55);}
+  @media (min-width:521px){ .cats{margin:0 -18px 6px; padding:10px 18px;} }
+  .cat-btn{display:flex; align-items:center; gap:6px; border:1px solid var(--line-strong); border-radius:22px; padding:8px 14px; font-size:14px; color:var(--chalk-soft);}
+  .cat-btn svg{width:17px; height:17px;}
+  .cat-btn.on{border-color:var(--lime); color:var(--lime); background:rgba(143,226,76,.08);}
+
+  /* ---------- sections ---------- */
+  .sec{margin-top:18px; scroll-margin-top:60px;}
+  .sec-title{display:flex; align-items:center; gap:10px; font-family:'Caveat',cursive; font-weight:700; font-size:36px; line-height:1;}
+  .sec-title svg{width:28px; height:28px; color:var(--lime);}
+  .chalk-line{height:8px; margin:6px 0 4px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='8' viewBox='0 0 300 8'%3E%3Cpath d='M2 5 C 40 2, 80 7, 120 4 S 200 2, 240 5 S 290 4, 298 3' fill='none' stroke='%23EFEBDC' stroke-opacity='.35' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") left center/300px 8px no-repeat;}
+  .sec-note{font-size:12.5px; color:var(--chalk-dim); margin-bottom:6px;}
+
+  /* ---------- ligne de menu ---------- */
+  .item{display:grid; grid-template-columns:58px 1fr; gap:12px; padding:14px 0; border-bottom:1px dashed var(--line);}
+  .item:last-child{border-bottom:0;}
+  .item.out{opacity:.5;}
+  .photo{width:58px; height:58px; border-radius:50%; overflow:hidden; border:2px solid var(--line-strong); background:var(--slate-3); display:flex; align-items:center; justify-content:center;}
+  .photo img{width:100%; height:100%; object-fit:cover;}
+  .photo svg{width:30px; height:30px;}
+  .name-line{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
+  .name{font-family:'Caveat',cursive; font-weight:700; font-size:28px; line-height:1;}
+  .badge{font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; padding:3px 7px; border-radius:4px; display:inline-flex; align-items:center; gap:4px; transform:translateY(-3px);}
+  .badge svg{width:11px; height:11px;}
+  .b-top{background:var(--amber); color:var(--ink);}
+  .b-new{background:var(--lime); color:var(--ink);}
+  .b-out{background:var(--red); color:#fff;}
+  .meta{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; margin-top:5px; font-size:12.5px; color:var(--chalk-soft);}
+  .profil{border:1px solid var(--line-strong); border-radius:12px; padding:1px 8px; font-size:11.5px; text-transform:capitalize;}
+  .profil.indica{border-color:rgba(160,140,255,.55); color:#C9BEFF;}
+  .profil.sativa{border-color:rgba(240,169,78,.6); color:#F7C98A;}
+  .profil.hybride{border-color:rgba(143,226,76,.5); color:#BDEB95;}
+  .taux{font-family:'IBM Plex Mono',monospace; color:var(--chalk);}
+  .aromes{font-family:'Caveat',cursive; font-size:19px; color:var(--chalk-soft); line-height:1.1;}
+  .prices{grid-column:1 / -1; display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-top:2px;}
+  .price{border:1px solid rgba(143,226,76,.35); border-radius:10px; padding:7px 4px 6px; text-align:center; transition:transform .12s, background .2s;}
+  .price .g{display:block; font-size:11px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;}
+  .price .e{display:block; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:15px; color:var(--lime);}
+  .price .u{display:block; font-size:10px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;}
+  .price:active{transform:scale(.95);}
+  .price.added{background:var(--lime); border-color:var(--lime);}
+  .price.added .e, .price.added .g, .price.added .u{color:var(--ink);}
+  .price:disabled{border-color:var(--line); cursor:not-allowed;}
+  .price:disabled .e{color:var(--chalk-dim); text-decoration:line-through;}
+  @media (min-width:720px){
+    .item{grid-template-columns:62px 1fr auto; align-items:center;}
+    .photo{width:62px; height:62px;}
+    .prices{grid-column:auto; grid-template-columns:repeat(4, 74px); margin-top:0;}
+    .info{position:relative;}
+  }
+  .tap-hint{font-family:'Caveat',cursive; font-size:20px; color:var(--chalk-dim); text-align:center; margin-top:16px;}
+
+  /* ---------- barre panier ---------- */
+  .bar{position:fixed; left:0; right:0; bottom:0; z-index:40; padding:10px 12px calc(10px + var(--safe-bot)); background:rgba(14,16,11,.94); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-top:1px solid var(--line);}
+  .bar-in{max-width:860px; margin:0 auto; display:flex; align-items:center; gap:10px;}
+  .bar-sum{flex:1; min-width:0; text-align:left;}
+  .bar-sum b{font-family:'IBM Plex Mono',monospace; font-size:19px; color:var(--lime); display:block;}
+  .bar-sum span{font-size:12.5px; color:var(--chalk-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:10px; padding:13px 18px; font-weight:600; font-size:15px; min-height:48px;}
+  .btn-lime{background:var(--lime); color:var(--ink);}
+  .btn-lime:disabled{opacity:.4;}
+  .btn-line{border:1px solid var(--line-strong); color:var(--chalk);}
+  .btn svg{width:18px; height:18px;}
+  .again{margin:0 auto 8px; max-width:860px; display:flex;}
+  .again .btn{width:100%; min-height:42px; padding:9px 14px; font-size:14px;}
+  .bump{animation:bump .35s ease;}
+  @keyframes bump{40%{transform:scale(1.08);}}
+
+  /* ---------- feuille (panier / commande / connexion) ---------- */
+  .sheet-bg{position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50; opacity:0; pointer-events:none; transition:opacity .2s;}
+  .sheet-bg.open{opacity:1; pointer-events:auto;}
+  .sheet{position:fixed; left:0; right:0; bottom:0; z-index:60; max-width:620px; margin:0 auto; max-height:92vh; overflow:auto;
+    background:var(--slate-2); border-top:1px solid var(--line-strong); border-radius:18px 18px 0 0; padding:10px 16px calc(20px + var(--safe-bot));
+    transform:translateY(105%); transition:transform .25s ease, visibility 0s .25s; visibility:hidden;}
+  .sheet.open{transform:translateY(0); visibility:visible; transition:transform .25s ease;}
+  .grab{width:42px; height:4px; border-radius:2px; background:var(--line-strong); margin:0 auto 12px;}
+  .sheet h3{font-family:'Caveat',cursive; font-weight:700; font-size:32px; line-height:1; margin-bottom:12px;}
+  .c-line{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line);}
+  .c-line .n{font-family:'Caveat',cursive; font-weight:700; font-size:23px; line-height:1;}
+  .qty{display:flex; align-items:center; gap:8px; margin-top:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--chalk-soft);}
+  .qty button{width:30px; height:30px; border:1px solid var(--line-strong); border-radius:8px; font-size:16px;}
+  .c-line .p{text-align:right; font-family:'IBM Plex Mono',monospace;}
+  .c-line .p small{display:block; color:var(--chalk-dim); font-size:11px;}
+  .c-total{display:flex; justify-content:space-between; align-items:baseline; margin:12px 0 4px; font-family:'Caveat',cursive; font-size:28px; font-weight:700;}
+  .c-total b{font-family:'IBM Plex Mono',monospace; font-size:20px; color:var(--lime);}
+  .field{display:flex; flex-direction:column; gap:6px; margin-bottom:12px;}
+  .field label{font-size:12px; color:var(--chalk-soft);}
+  .opts{display:flex; flex-direction:column; gap:8px;}
+  .opt{display:flex; align-items:flex-start; gap:10px; font-size:14px; cursor:pointer;}
+  .opt input{width:auto; margin-top:3px; accent-color:var(--lime); flex:none;}
+  .opt.locked{color:var(--chalk-dim); cursor:not-allowed;}
+  .earn{font-size:13px; color:var(--lime); margin:2px 0 12px;}
+  .msg{font-size:14px; min-height:20px; margin-top:10px; color:var(--amber);}
+  .msg.ok{color:var(--lime);}
+  .empty{color:var(--chalk-dim); text-align:center; padding:18px 0; font-family:'Caveat',cursive; font-size:22px;}
+
+  /* ---------- toast ---------- */
+  .toast{position:fixed; left:50%; bottom:calc(92px + var(--safe-bot)); transform:translate(-50%, 30px); opacity:0; z-index:70; background:var(--lime); color:var(--ink);
+    padding:10px 16px; border-radius:10px; font-weight:600; font-size:14px; transition:all .25s; pointer-events:none; white-space:nowrap; max-width:calc(100% - 24px); overflow:hidden; text-overflow:ellipsis;}
+  .toast.show{transform:translate(-50%, 0); opacity:1;}
+
+  /* ---------- âge ---------- */
+  #gate{position:fixed; inset:0; z-index:100; background:#0E100B; display:flex; align-items:center; justify-content:center; text-align:center; padding:24px;}
+  #gate h2{font-family:'Caveat',cursive; font-size:38px; line-height:1.05; margin-bottom:10px;}
+  #gate p{color:var(--chalk-soft); max-width:420px; margin:0 auto 22px; font-size:14px;}
+  .test-ribbon{max-width:860px; margin:0 auto; padding:0 16px; font-size:11.5px; color:var(--chalk-dim);}
+  @media (prefers-reduced-motion: reduce){*{animation:none !important; transition:none !important;}}
+</style>
+</head>
+<body>
+
+<div id="gate" hidden>
+  <div>
+    <h2>Le comptoir est réservé aux majeurs</h2>
+    <p>Produits à base de CBD, THC inférieur à 0,3 %. En entrant, tu confirmes avoir 18 ans ou plus.</p>
+    <button class="btn btn-lime" id="gate-yes">J'ai 18 ans ou plus</button>
+  </div>
+</div>
+
+<!-- icônes -->
+<svg style="display:none">
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15Zm0 0 7-7"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11Z"/><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c1 3.5-1.5 5-1.5 7.5 0 1.3 1 2.3 2.2 2.3 1.5 0 2.3-1.3 2-3 2.3 1.6 3.8 4.2 3.8 6.7A6.5 6.5 0 0 1 12 22a6.5 6.5 0 0 1-6.5-6.5C5.5 10 12 7 12 2Z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7Z"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M6 7h12l1 14H5L6 7Z"/><path fill="none" stroke="currentColor" stroke-width="2" d="M9 7a3 3 0 0 1 6 0"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 11a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></symbol>
+</svg>
+
+<header class="top">
+  <a class="logo" href="/">Smok<span>'</span>house<small>Coffee shop · menu</small></a>
+  <div class="who" id="who"><button class="linkbtn" id="login-open">Se connecter</button></div>
+</header>
+<p class="test-ribbon">Version test de la carte — commandes réelles, livrées le jour même au Puy-en-Velay et en Haute-Loire.</p>
+
+<main class="board">
+  <section class="special" id="special" hidden>
+    <span class="special-tag" id="sp-tag">Le menu du jour</span>
+    <h2 id="sp-title"></h2>
+    <p id="sp-text"></p>
+    <span class="promo" id="sp-promo" hidden></span>
+    <div class="row-item" id="sp-item"></div>
+  </section>
+
+  <nav class="cats" id="cats">
+    <button class="cat-btn on" data-cat="fleur"><svg><use href="#i-leaf"/></svg>Fleurs</button>
+    <button class="cat-btn" data-cat="resine"><svg><use href="#i-drop"/></svg>Résines</button>
+  </nav>
+
+  <section class="sec" id="sec-fleur">
+    <div class="sec-title"><svg><use href="#i-leaf"/></svg>Fleurs</div>
+    <div class="chalk-line"></div>
+    <p class="sec-note">Prix total par quantité. Touche un prix pour l'ajouter au panier.</p>
+    <div id="list-fleur"></div>
+  </section>
+  <section class="sec" id="sec-resine">
+    <div class="sec-title"><svg><use href="#i-drop"/></svg>Résines</div>
+    <div class="chalk-line"></div>
+    <p class="sec-note">Prix total par quantité. Touche un prix pour l'ajouter au panier.</p>
+    <div id="list-resine"></div>
+  </section>
+  <p class="tap-hint">THC &lt; 0,3 % · produits analysés · réservé aux majeurs</p>
+</main>
+
+<!-- barre panier -->
+<div class="bar">
+  <div class="again" id="again-wrap" hidden><button class="btn btn-line" id="again"><svg><use href="#i-redo"/></svg>Recommander comme la dernière fois</button></div>
+  <div class="bar-in">
+    <div class="bar-sum" id="bar-sum"><b>0,00 €</b><span>Touche un prix pour commander</span></div>
+    <button class="btn btn-line" id="bar-cart" aria-label="Voir le panier"><svg><use href="#i-bag"/></svg><span id="bar-n">0</span></button>
+    <button class="btn btn-lime" id="bar-order" disabled>Commander</button>
+  </div>
+</div>
+
+<div class="sheet-bg" id="sheet-bg"></div>
+<div class="sheet" id="sheet"><div class="grab"></div><div id="sheet-body"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   Smok'house — menu « coffee shop » (version test)
+   Même base Supabase, mêmes prix, même circuit de commande que le site.
+   ===================================================================== */
+const SUPABASE_URL = 'https://qtagbmjzzmwxiptkgjmn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_UF_VzwObkRhDspRMyzRlRw_ThcJT-zQ';
+const NTFY_TOPIC = ''; // même sujet ntfy que sur le site (laisser vide pour désactiver)
+
+// Grille de prix identique au site (prix au gramme selon la quantité)
+const PRODUCTS = {
+  superlemonhaze: { name:'SuperLemon Haze', cat:'fleur',  tiers:[[1,9],[3,8.5],[5,8],[50,7]], taux:'THV 40 %' },
+  ogkush:         { name:'OG Kush',         cat:'fleur',  tiers:[[1,9],[3,8.5],[5,8],[50,7]], taux:'THV 40 %' },
+  piatella:       { name:'Piatella',        cat:'resine', tiers:[[1,9],[3,8.5],[5,8],[50,7]], taux:'THV 60 %' },
+  bananadry:      { name:'Banana Dry',      cat:'resine', tiers:[[1,9],[3,8.5],[5,8],[50,7]], taux:'THV 50 %' },
+  caliplate:      { name:'Cali Plate',      cat:'resine', tiers:[[1,10],[25,9]], taux:'THV 80 %' },
+  manali:         { name:'Manali',          cat:'resine', tiers:[[1,10],[25,9]], taux:'THV 80 %' },
+  caligazberry:   { name:'CaliGaz Berry',   cat:'resine', tiers:[[1,10],[25,9]], taux:'THV 80 %' }
+};
+const PALIERS = [1, 3, 5, 10];
+const ORDER = ['superlemonhaze', 'ogkush', 'piatella', 'caliplate', 'caligazberry', 'manali', 'bananadry'];
+
+let sb = null, user = null, profile = null, menu = {}, stock = {}, tops = [], special = null;
+let FID = { points_par_euro: 1, recompenses: [] }, fidOk = false, lastOrder = null;
+let cart = {};
+try{ cart = JSON.parse(localStorage.getItem('sh_menu_cart') || '{}') || {}; }catch(e){ cart = {}; }
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur = (n) => (Math.round(n * 100) / 100).toFixed(2).replace('.', ',') + ' €';
+const eurShort = (n) => { const r = Math.round(n * 100) / 100; return (r % 1 ? r.toFixed(2).replace('.', ',') : String(r)) + ' €'; };
+const gfmt = (n) => String(Math.round(n * 100) / 100).replace('.', ',') + ' g';
+
+/* ---------- produits & prix ---------- */
+function prod(pid){
+  const base = PRODUCTS[pid], m = menu[pid] || {};
+  if(!base && !(m.prix_1g > 0)) return null;
+  return {
+    id: pid, name: m.nom || (base && base.name) || pid, cat: m.categorie || (base && base.cat) || 'fleur',
+    // grille de prix de la base (la même que celle utilisée par le serveur) en priorité
+    tiers: Array.isArray(m.prix_paliers) && m.prix_paliers.length ? m.prix_paliers.map(t => [Number(t[0]), Number(t[1])]).sort((a, b) => a[0] - b[0]) : base ? base.tiers : [[1, Number(m.prix_1g)]],
+    taux: m.taux != null ? m.taux : (base && base.taux), profil: m.profil || '', aromes: m.aromes || '',
+    photo: m.photo_url || '', nouveau: !!m.nouveau, top: !!m.top_vente || tops.includes(pid),
+    visible: m.visible !== false, ordre: m.ordre != null ? m.ordre : ORDER.indexOf(pid) * 10 + 10,
+    dispo: stock[pid] !== false
+  };
+}
+function rate(pid, g){ const p = prod(pid); if(!p) return 0; let r = p.tiers[0][1]; p.tiers.forEach(([min, v]) => { if(g >= min) r = v; }); return r; }
+const linePrice = (pid, g) => rate(pid, g) * g;
+const cartTotal = () => Object.keys(cart).reduce((a, pid) => a + linePrice(pid, cart[pid]), 0);
+function allProducts(){
+  const ids = new Set([...Object.keys(PRODUCTS), ...Object.keys(menu)]);
+  return [...ids].map(prod).filter(p => p && p.visible).sort((a, b) => a.ordre - b.ordre);
+}
+
+/* ---------- rendu du menu ---------- */
+function photoHtml(p){
+  const icon = `<svg style="color:${p.cat === 'resine' ? 'var(--amber)' : 'var(--lime)'}"><use href="#${p.cat === 'resine' ? 'i-drop' : 'i-leaf'}"/></svg>`;
+  const src = p.photo || ('/menu/' + p.id + '.jpg');
+  return `<div class="photo"><img src="${esc(src)}" alt="" loading="lazy" onerror="this.replaceWith(document.createRange().createContextualFragment(this.dataset.f))" data-f='${icon.replace(/'/g, '&#39;')}'></div>`;
+}
+function itemHtml(p){
+  const badges = (!p.dispo ? '<span class="badge b-out">Rupture</span>' : '')
+    + (p.top ? '<span class="badge b-top"><svg><use href="#i-flame"/></svg>Top vente</span>' : '')
+    + (p.nouveau ? '<span class="badge b-new"><svg><use href="#i-star"/></svg>Nouveau</span>' : '');
+  const prices = PALIERS.map(g => {
+    const total = linePrice(p.id, g);
+    return `<button class="price" data-add="${esc(p.id)}" data-g="${g}" ${p.dispo ? '' : 'disabled'} aria-label="Ajouter ${g} g de ${esc(p.name)} pour ${eur(total)}">
+      <span class="g">${g} g</span><span class="e">${eurShort(total)}</span>${g > 1 ? `<span class="u">${eurShort(rate(p.id, g))}/g</span>` : '<span class="u">&nbsp;</span>'}</button>`;
+  }).join('');
+  return `<div class="item ${p.dispo ? '' : 'out'}">
+    ${photoHtml(p)}
+    <div class="info">
+      <div class="name-line"><span class="name">${esc(p.name)}</span>${badges}</div>
+      <div class="meta">${p.profil ? `<span class="profil ${esc(p.profil)}">${esc(p.profil)}</span>` : ''}${p.taux ? `<span class="taux">${esc(p.taux)}</span>` : ''}</div>
+      ${p.aromes ? `<div class="aromes">${esc(p.aromes)}</div>` : ''}
+    </div>
+    <div class="prices">${prices}</div>
+  </div>`;
+}
+function renderMenu(){
+  const list = allProducts();
+  ['fleur', 'resine'].forEach(cat => {
+    const items = list.filter(p => p.cat === cat);
+    $('list-' + cat).innerHTML = items.map(itemHtml).join('') || '<div class="empty">Bientôt de retour…</div>';
+    $('sec-' + cat).hidden = !items.length;
+  });
+  // menu du jour
+  const sp = special;
+  const spProd = sp && sp.product_id ? prod(sp.product_id) : null;
+  $('special').hidden = !(sp && sp.actif && (sp.texte || sp.promo || spProd));
+  if(!$('special').hidden){
+    $('sp-tag').textContent = sp.titre || 'Le menu du jour';
+    $('sp-title').hidden = true; // le nom apparaît déjà sur la ligne de la variété
+    $('sp-text').textContent = sp.texte || '';
+    $('sp-promo').hidden = !sp.promo; $('sp-promo').textContent = sp.promo || '';
+    $('sp-item').innerHTML = spProd && spProd.visible ? itemHtml(spProd) : '';
+    $('sp-item').hidden = !(spProd && spProd.visible);
+  }
+}
+
+/* ---------- panier ---------- */
+function saveCart(){ try{ localStorage.setItem('sh_menu_cart', JSON.stringify(cart)); }catch(e){} }
+function renderBar(){
+  const ids = Object.keys(cart), n = ids.length, t = cartTotal();
+  $('bar-n').textContent = n;
+  $('bar-order').disabled = !n;
+  $('bar-sum').innerHTML = `<b>${eur(t)}</b><span>${n ? ids.map(pid => gfmt(cart[pid]) + ' ' + (prod(pid) ? prod(pid).name : pid)).join(' · ') : 'Touche un prix pour commander'}</span>`;
+  $('again-wrap').hidden = !(lastOrder && !n);
+}
+function addToCart(pid, g, btn){
+  const p = prod(pid); if(!p || !p.dispo) return;
+  cart[pid] = Math.round(((cart[pid] || 0) + g) * 100) / 100;
+  saveCart(); renderBar();
+  toast('+' + gfmt(g) + ' ' + p.name + ' · ' + eur(linePrice(pid, g)));
+  try{ navigator.vibrate && navigator.vibrate(25); }catch(e){}
+  if(btn){ btn.classList.add('added'); setTimeout(() => btn.classList.remove('added'), 650); }
+  $('bar-sum').classList.remove('bump'); void $('bar-sum').offsetWidth; $('bar-sum').classList.add('bump');
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-add]'); if(!b || b.disabled) return;
+  addToCart(b.dataset.add, Number(b.dataset.g), b);
+});
+function toast(t){ if($('sheet').classList.contains('open')) return; const el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 1800); }
+
+/* ---------- onglets ---------- */
+document.querySelectorAll('.cat-btn').forEach(b => b.addEventListener('click', () => {
+  $('sec-' + b.dataset.cat).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(en => { if(en.isIntersecting){ const cat = en.target.id.replace('sec-', ''); document.querySelectorAll('.cat-btn').forEach(x => x.classList.toggle('on', x.dataset.cat === cat)); } });
+}, { rootMargin: '-40% 0px -55% 0px' });
+['sec-fleur', 'sec-resine'].forEach(id => io.observe($(id)));
+
+/* ---------- feuille ---------- */
+function openSheet(html){ $('toast').classList.remove('show'); $('sheet-body').innerHTML = html; $('sheet').classList.add('open'); $('sheet-bg').classList.add('open'); }
+function closeSheet(){ $('sheet').classList.remove('open'); $('sheet-bg').classList.remove('open'); }
+$('sheet-bg').addEventListener('click', closeSheet);
+
+/* ---------- panier + commande ---------- */
+function cartLinesHtml(){
+  const ids = Object.keys(cart);
+  if(!ids.length) return '<div class="empty">Ton panier est vide.</div>';
+  return ids.map(pid => { const p = prod(pid), g = cart[pid];
+    return `<div class="c-line"><div><div class="n">${esc(p ? p.name : pid)}</div>
+      <div class="qty"><button data-dec="${esc(pid)}" aria-label="Moins">−</button><span>${gfmt(g)}</span><button data-inc="${esc(pid)}" aria-label="Plus">+</button>
+      <button data-rm="${esc(pid)}" style="width:auto; border:0; text-decoration:underline; font-size:12px; color:var(--chalk-dim); margin-left:6px;">retirer</button></div></div>
+      <div class="p">${eur(linePrice(pid, g))}<small>${eurShort(rate(pid, g))}/g</small></div></div>`; }).join('');
+}
+function openCheckout(){
+  const loggedIn = !!(user && profile);
+  openSheet(`<h3>Ta commande</h3>
+    <div id="c-lines">${cartLinesHtml()}</div>
+    <div class="c-total">Total <b id="c-total">${eur(cartTotal())}</b></div>
+    <form id="c-form" autocomplete="on">
+      <div class="field"><label for="c-name">Prénom</label><input id="c-name" required autocomplete="given-name" value="${esc(profile ? profile.name || '' : '')}"></div>
+      <div class="field"><label for="c-phone">Téléphone</label><input id="c-phone" type="tel" required autocomplete="tel" placeholder="06 XX XX XX XX" value="${esc(profile && profile.phone || '')}"></div>
+      <div class="field"><label for="c-addr">Adresse (Haute-Loire)</label><input id="c-addr" required autocomplete="street-address" placeholder="N°, rue, ville"></div>
+      <div class="field"><label for="c-cp">Code postal (43…)</label><input id="c-cp" required inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="43000"></div>
+      <div class="field"><label for="c-notes">Notes (optionnel)</label><textarea id="c-notes" rows="2" placeholder="Créneau préféré, précisions…"></textarea></div>
+      <div class="field"><label>Paiement</label><div class="opts"><label class="opt"><input type="radio" name="c-pay" checked> Paiement à la livraison (espèces ou carte)</label></div></div>
+      <div class="field" id="c-rw-box" hidden><label>Mes points fidélité : <b class="mono" style="color:var(--lime);">${profile ? profile.points : 0}</b> pts</label><div class="opts" id="c-rw"></div></div>
+      <p class="earn" id="c-earn"></p>
+      <button class="btn btn-lime" type="submit" style="width:100%;" id="c-ok">Valider la commande</button>
+      <p class="msg" id="c-msg"></p>
+      ${loggedIn ? '' : '<p style="font-size:13px; color:var(--chalk-soft); text-align:center; margin-top:4px;">Déjà un compte fidélité ? <button type="button" class="linkbtn" id="c-login">Se connecter</button></p>'}
+    </form>`);
+  bindCartLines(); renderRewards();
+  if($('c-login')) $('c-login').addEventListener('click', openLogin);
+  $('c-form').addEventListener('submit', submitOrder);
+}
+function bindCartLines(){
+  $('c-lines').onclick = (e) => {
+    const t = e.target.closest('button'); if(!t) return;
+    const pid = t.dataset.inc || t.dataset.dec || t.dataset.rm; if(!pid) return;
+    if(t.dataset.inc) cart[pid] = Math.round((cart[pid] + 1) * 100) / 100;
+    if(t.dataset.dec) cart[pid] = Math.max(1, Math.round((cart[pid] - 1) * 100) / 100);
+    if(t.dataset.rm) delete cart[pid];
+    saveCart(); renderBar(); $('c-lines').innerHTML = cartLinesHtml(); $('c-total').textContent = eur(cartTotal()); renderRewards();
+    if(!Object.keys(cart).length) $('c-ok').disabled = true;
+  };
+}
+function renderRewards(){
+  const total = cartTotal(), gain = Math.floor(total * Number(FID.points_par_euro || 1));
+  if(!(user && profile)){ $('c-earn').textContent = gain > 0 ? 'Avec un compte fidélité, cette commande te rapporterait ' + gain + ' pts.' : ''; return; }
+  $('c-earn').textContent = gain > 0 ? 'Cette commande te rapportera ' + gain + ' pts (crédités à la livraison).' : '';
+  const list = fidOk ? (FID.recompenses || []) : [];
+  $('c-rw-box').hidden = !list.length;
+  const pts = profile.points || 0;
+  const prev = (document.querySelector('input[name="c-rw"]:checked') || {}).value || '0';
+  $('c-rw').innerHTML = '<label class="opt"><input type="radio" name="c-rw" value="0"' + (prev === '0' ? ' checked' : '') + '> Ne pas utiliser mes points</label>'
+    + list.map(r => {
+      const min = Number(r.min_achat || 0), okP = pts >= r.points, okM = total >= min, ok = okP && okM;
+      const why = !okP ? ' (il te manque ' + (r.points - pts) + ' pts)' : !okM ? ' (dès ' + min + ' € : ajoute ' + eur(min - total) + ')' : (min ? ' · dès ' + min + ' €' : '');
+      return `<label class="opt ${ok ? '' : 'locked'}"><input type="radio" name="c-rw" value="${r.points}" ${ok ? '' : 'disabled'} ${ok && prev === String(r.points) ? 'checked' : ''}> 🎁 ${esc(r.label)} — ${r.points} pts${why}</label>`;
+    }).join('');
+  if(!document.querySelector('input[name="c-rw"]:checked')) document.querySelector('input[name="c-rw"][value="0"]').checked = true;
+}
+async function submitOrder(e){
+  e.preventDefault();
+  const ids = Object.keys(cart); if(!ids.length || !sb) return;
+  const msg = $('c-msg'); msg.className = 'msg'; msg.textContent = '';
+  const name = $('c-name').value.trim(), phone = $('c-phone').value.trim(), address = $('c-addr').value.trim(), notes = $('c-notes').value.trim();
+  if(!name || !phone || !address){ msg.textContent = 'Prénom, téléphone et adresse sont nécessaires.'; return; }
+  const cp = $('c-cp').value.trim();
+  if(!/^43\d{3}$/.test(cp)){ msg.textContent = 'Livraison locale uniquement en Haute-Loire (code postal 43…).'; return; }
+  $('c-ok').disabled = true; $('c-ok').textContent = 'Envoi…';
+  try{
+    // Commande vérifiée par le serveur : prix, total et stock recalculés (Netlify Function)
+    const headers = { 'Content-Type': 'application/json' };
+    const ses = await sb.auth.getSession(); if(ses.data && ses.data.session) headers.Authorization = 'Bearer ' + ses.data.session.access_token;
+    const rw = parseInt((document.querySelector('input[name="c-rw"]:checked') || {}).value || '0', 10);
+    const res = await fetch('/.netlify/functions/create-order', { method: 'POST', headers, body: JSON.stringify({
+      mode: 'local', items: Object.assign({}, cart), name, phone, address, postal_code: cp, email: user ? user.email : '',
+      notes: (notes ? notes + ' — ' : '') + 'via le menu', reward_points: rw }) });
+    const d = await res.json().catch(() => ({}));
+    if(!res.ok || !d.ok) throw new Error(d.message || (res.status === 404 ? 'Commande en ligne indisponible pour le moment.' : 'Erreur, réessaie dans un instant.'));
+    let extra = '';
+    if(d.order.reward_label){ extra = ' 🎁 ' + d.order.reward_label + ' ajouté (-' + d.order.reward_points + ' pts).'; if(profile && d.order.points_restants != null){ profile.points = d.order.points_restants; renderWho(); } }
+    if(d.reward_warning) extra += ' ' + d.reward_warning;
+    cart = {}; saveCart(); renderBar();
+    msg.className = 'msg ok'; msg.textContent = 'Commande n° ' + d.order.id + ' envoyée ! Je te recontacte vite.' + extra;
+    $('c-ok').textContent = 'Envoyée ✓';
+    if(user) loadLastOrder();
+    setTimeout(closeSheet, extra ? 4200 : 2600);
+  }catch(err){
+    console.error(err); $('c-ok').disabled = false; $('c-ok').textContent = 'Valider la commande';
+    msg.textContent = err && err.message && !/fetch/i.test(err.message) ? err.message : 'Erreur, réessaie dans un instant.';
+  }
+}
+$('bar-order').addEventListener('click', openCheckout);
+$('bar-cart').addEventListener('click', openCheckout);
+
+/* ---------- recommander comme la dernière fois ---------- */
+async function loadLastOrder(){
+  if(!user) return;
+  let r = await sb.from('orders').select('items_json, offert_json, created_at').eq('customer_id', user.id).not('items_json', 'is', null).neq('status', 'annulee').order('created_at', { ascending: false }).limit(1);
+  if(r.error) r = await sb.from('orders').select('items_json, created_at').eq('customer_id', user.id).not('items_json', 'is', null).order('created_at', { ascending: false }).limit(1);
+  const o = r.data && r.data[0];
+  lastOrder = null;
+  if(o && o.items_json){
+    const gifts = o.offert_json || {}, items = {};
+    Object.entries(o.items_json).forEach(([pid, g]) => { const paid = Math.round((Number(g) - (Number(gifts[pid]) || 0)) * 100) / 100; if(paid > 0 && prod(pid)) items[pid] = paid; });
+    if(Object.keys(items).length) lastOrder = items;
+  }
+  renderBar();
+}
+$('again').addEventListener('click', () => {
+  if(!lastOrder) return;
+  const skipped = [];
+  Object.entries(lastOrder).forEach(([pid, g]) => { const p = prod(pid); if(p && p.dispo) cart[pid] = g; else skipped.push(p ? p.name : pid); });
+  saveCart(); renderBar();
+  if(skipped.length) toast('En rupture : ' + skipped.join(', '));
+  if(Object.keys(cart).length) openCheckout();
+});
+
+/* ---------- connexion ---------- */
+function renderWho(){
+  $('who').innerHTML = user && profile
+    ? `<span>${esc(profile.name || '')}</span><span class="pts">${profile.points || 0} pts</span>`
+    : '<button class="linkbtn" id="login-open">Se connecter</button>';
+  if($('login-open')) $('login-open').addEventListener('click', openLogin);
+}
+function openLogin(){
+  openSheet(`<h3>Connexion fidélité</h3>
+    <form id="l-form">
+      <div class="field"><label for="l-mail">Email</label><input id="l-mail" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="l-pass">Mot de passe</label><input id="l-pass" type="password" autocomplete="current-password" required></div>
+      <button class="btn btn-lime" type="submit" style="width:100%;">Se connecter</button>
+      <p class="msg" id="l-msg"></p>
+      <p style="font-size:13px; color:var(--chalk-soft); text-align:center;">Pas encore de carte ? <a href="/#compte">Crée ton compte fidélité</a></p>
+    </form>`);
+  $('l-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const { data, error } = await sb.auth.signInWithPassword({ email: $('l-mail').value.trim(), password: $('l-pass').value });
+    if(error){ $('l-msg').textContent = 'Email ou mot de passe incorrect.'; return; }
+    user = data.user; await loadProfile(); closeSheet(); toast('Connecté·e ✓');
+  });
+}
+async function loadProfile(){
+  if(!user){ profile = null; renderWho(); return; }
+  let r = await sb.from('profiles').select('name, points, phone').eq('id', user.id).maybeSingle();
+  if(r.error) r = await sb.from('profiles').select('name, points').eq('id', user.id).maybeSingle();
+  profile = r.data || null; renderWho(); loadLastOrder();
+}
+
+/* ---------- âge ---------- */
+(function(){
+  let ok = false; try{ ok = sessionStorage.getItem('sh_age_ok') === '1' || !!localStorage.getItem('sh_age_ok'); }catch(e){}
+  if(!ok) $('gate').hidden = false;
+  $('gate-yes').addEventListener('click', () => { $('gate').hidden = true; try{ sessionStorage.setItem('sh_age_ok', '1'); }catch(e){} });
+})();
+
+/* ---------- démarrage ---------- */
+async function boot(){
+  renderMenu(); renderBar(); renderWho();
+  if(!window.supabase){ setTimeout(boot, 400); return; }
+  if(sb) return;
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const [m, j, s, t, f, sess] = await Promise.all([
+    sb.from('menu_produits').select('*'),
+    sb.from('menu_jour').select('*').eq('id', 1).maybeSingle(),
+    sb.rpc('public_stock'), sb.rpc('top_ventes'), sb.rpc('fidelite_public'), sb.auth.getSession()
+  ]);
+  if(!m.error && m.data) m.data.forEach(r => { menu[r.product_id] = r; });
+  if(!j.error) special = j.data;
+  if(!s.error && s.data) s.data.forEach(r => { stock[r.id] = r.available; });
+  if(!t.error && t.data) tops = t.data.map(x => typeof x === 'string' ? x : (x.top_ventes || Object.values(x)[0]));
+  if(!f.error && f.data){ FID = f.data; fidOk = true; }
+  // le panier ne garde que des produits encore au menu
+  Object.keys(cart).forEach(pid => { if(!prod(pid)) delete cart[pid]; }); saveCart();
+  renderMenu(); renderBar();
+  user = sess.data && sess.data.session ? sess.data.session.user : null;
+  await loadProfile();
+}
+boot();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+</script>
+</body>
+</html>

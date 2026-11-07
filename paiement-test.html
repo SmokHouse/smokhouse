@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Paiement test — Smok'house</title>
+<style>
+  :root{ --bg:#0A0C07; --surface:#14170D; --line:#2a3220; --fg:#F3EFDF; --soft:#A8A38B; --moss:#8FE24C; --clay:#F0A94E; }
+  *{ box-sizing:border-box; margin:0; }
+  body{ background:var(--bg); color:var(--fg); font-family:system-ui, -apple-system, Segoe UI, sans-serif; min-height:100vh; display:grid; place-items:center; padding:16px; }
+  .box{ width:100%; max-width:420px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:26px; }
+  .warn{ background:rgba(240,169,78,.12); color:var(--clay); border:1px solid rgba(240,169,78,.35); border-radius:10px; padding:10px 12px; font-size:13px; margin-bottom:18px; }
+  h1{ font-family:Georgia, serif; font-size:22px; margin-bottom:6px; }
+  .amount{ font-size:34px; font-weight:700; color:var(--moss); margin:14px 0 4px; }
+  p{ color:var(--soft); font-size:14px; line-height:1.5; }
+  button{ width:100%; border:0; border-radius:999px; padding:14px; font-size:15px; font-weight:700; cursor:pointer; margin-top:12px; }
+  .ok{ background:var(--moss); color:#0E1207; } .ko{ background:transparent; color:var(--fg); border:1px solid var(--line); }
+  #msg{ margin-top:14px; min-height:20px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="warn">⚠️ Page de paiement <b>SIMULÉE</b> (mode test). Aucun argent n'est débité. Ce mode ne doit jamais rester actif sur le site en production.</div>
+  <h1>Smok'house</h1>
+  <p>Commande n° <b id="num"></b></p>
+  <div class="amount" id="amount"></div>
+  <button class="ok" id="pay">Simuler un paiement réussi</button>
+  <button class="ko" id="fail">Simuler un paiement refusé</button>
+  <p id="msg"></p>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const o = q.get('o'), a = q.get('a'), r = q.get('r'), t = q.get('t');
+  document.getElementById('num').textContent = o || '?';
+  document.getElementById('amount').textContent = a ? (Number(a) / 100).toFixed(2).replace('.', ',') + ' €' : '—';
+  async function send(status){
+    const msg = document.getElementById('msg');
+    msg.textContent = 'Traitement…';
+    document.querySelectorAll('button').forEach(b => b.disabled = true);
+    try{
+      const res = await fetch('/.netlify/functions/payment-webhook', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: o, amount_cents: Number(a), ref: r, token: t, status }) });
+      const d = await res.json().catch(() => ({}));
+      if(!res.ok){ msg.textContent = 'Refusé : ' + (d.error || res.status); document.querySelectorAll('button').forEach(b => b.disabled = false); return; }
+      location.href = '/?paiement=' + (status === 'paid' ? 'ok' : 'echec') + '&commande=' + encodeURIComponent(o) + '#compte';
+    }catch(e){ msg.textContent = 'Erreur réseau, réessaie.'; document.querySelectorAll('button').forEach(b => b.disabled = false); }
+  }
+  document.getElementById('pay').addEventListener('click', () => send('paid'));
+  document.getElementById('fail').addEventListener('click', () => send('failed'));
+</script>
+</body>
+</html>

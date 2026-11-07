@@ -1,0 +1,6 @@
+{
+  "name": "smokhouse",
+  "private": true,
+  "description": "Site et boutique Smok'house (Netlify + Supabase)",
+  "engines": { "node": ">=18" }
+}

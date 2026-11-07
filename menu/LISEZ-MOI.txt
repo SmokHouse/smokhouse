@@ -1,0 +1,6 @@
+Photos rondes du menu (optionnel) : dépose ici une photo carrée par variété,
+nommée avec l'identifiant du produit, en .jpg :
+  superlemonhaze.jpg, ogkush.jpg, piatella.jpg, caliplate.jpg,
+  caligazberry.jpg, manali.jpg, bananadry.jpg
+Sans photo, le menu affiche une petite illustration (feuille ou goutte).
+Tu peux aussi mettre un lien de photo dans l'admin : Stock > 🗒 Menu.

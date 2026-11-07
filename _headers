@@ -1,0 +1,6 @@
+/sw.js
+  Cache-Control: no-cache
+/*.webmanifest
+  Content-Type: application/manifest+json
+/admin/*
+  X-Robots-Tag: noindex, nofollow

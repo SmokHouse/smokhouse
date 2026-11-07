@@ -1,0 +1,22 @@
+{
+  "name": "Smok'house CBD",
+  "short_name": "Smok'house",
+  "description": "Fleurs et résines CBD — livraison le jour même au Puy-en-Velay et en Haute-Loire.",
+  "lang": "fr",
+  "id": "/",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0C07",
+  "theme_color": "#0A0C07",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Ma carte fidélité", "url": "/?source=app#compte", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Catalogue", "url": "/?source=app#catalogue", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
