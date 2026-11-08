@@ -708,6 +708,22 @@
   .mode-intro{border-left-color:var(--gold);}
   .order-card{border-radius:14px;}
   #gate h2{font-family:'Playfair Display',serif;}
+  /* promos */
+  .promo-line{display:flex; flex-direction:column; gap:4px; border:1.5px dashed rgba(47,224,127,.55); border-radius:12px; padding:8px 12px; color:var(--moss); font-weight:600; font-size:14px; box-shadow:0 0 12px rgba(47,224,127,.15);}
+  .promo-line small{color:var(--fg-soft); font-weight:400;}
+  .pc-promo{position:absolute; top:12px; right:12px; z-index:1; background:var(--moss); color:#03140A; font-size:12px; font-weight:700; letter-spacing:.06em; padding:4px 10px; border-radius:8px; box-shadow:0 0 12px rgba(47,224,127,.5);}
+  /* menu du jour */
+  .mdj-wrap{padding:48px 0 0;}
+  .mdj{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); border:1px solid var(--line-gold); border-radius:20px; overflow:hidden;
+       background:linear-gradient(135deg, rgba(233,184,108,.10), var(--surface) 55%); box-shadow:0 0 0 1px rgba(233,184,108,.08), 0 14px 40px rgba(0,0,0,.45);}
+  .mdj-ph{min-height:220px; background:#000 center/cover no-repeat;}
+  .mdj-body{padding:28px 30px; display:flex; flex-direction:column; gap:10px; justify-content:center;}
+  .mdj-tag{align-self:flex-start; background:var(--gold); color:#2A1A05; font-weight:600; font-size:13px; letter-spacing:.08em; text-transform:uppercase; padding:5px 12px; border-radius:20px;}
+  .mdj-body h2{font-size:clamp(28px,3vw,40px); line-height:1.08;}
+  .mdj-body p{color:var(--fg-soft); font-size:16px; max-width:520px;}
+  .mdj-promo{align-self:flex-start; border:1.5px dashed var(--moss); color:var(--moss); font-weight:600; padding:6px 12px; border-radius:10px; box-shadow:0 0 12px rgba(47,224,127,.25);}
+  .mdj-cta{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;}
+  @media (max-width:760px){ .mdj{grid-template-columns:1fr;} .mdj-ph{min-height:180px;} .mdj-body{padding:22px 20px;} .mdj-cta .btn{flex:1; text-align:center;} }
 </style>
 </head>
 <body>
@@ -769,6 +785,7 @@
       <div class="navwrap">
         <nav class="navlinks">
           <a href="#catalogue">Catalogue</a>
+          <a href="/menu.html">Menu</a>
           <a href="#commander">Commander</a>
           <a href="#livraison">Livraison</a>
           <a href="#faq">FAQ</a>
@@ -804,6 +821,7 @@
     </div>
     <nav class="mobile-menu" id="mobile-menu">
       <a href="#catalogue">Catalogue</a>
+          <a href="/menu.html">Menu</a>
       <a href="#commander">Commander</a>
       <a href="#livraison">Livraison</a>
       <a href="#faq">FAQ</a>
@@ -837,6 +855,26 @@
   <hr class="divider">
 
   <!-- CATALOGUE -->
+  <!-- MENU DU JOUR (géré dans l'admin : Stock → 🗒 Menu) -->
+  <section class="mdj-wrap" id="mdj" hidden>
+    <div class="wrap">
+      <div class="mdj">
+        <div class="mdj-ph" id="mdj-ph"></div>
+        <div class="mdj-body">
+          <span class="mdj-tag" id="mdj-tag">Le menu du jour</span>
+          <h2 id="mdj-title"></h2>
+          <p id="mdj-text"></p>
+          <span class="mdj-promo" id="mdj-promo" hidden></span>
+          <div class="mdj-cta">
+            <button type="button" class="btn btn-primary" id="mdj-add" hidden>Ajouter 1 g au panier</button>
+            <button type="button" class="btn btn-dark" id="mdj-sheet" hidden>Fiche produit</button>
+            <a href="/menu.html" class="btn btn-dark">Voir tout le menu</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="catalogue section-pad" id="catalogue">
     <div class="wrap">
       <div class="section-head reveal">
@@ -1987,12 +2025,24 @@
     return Object.keys(cart).length;
   }
 
+  // Promos en cours (lues en base) : même calcul que le serveur, qui reste seul juge du prix final
+  var PROMOS = [];
+  function promoCat(pid){ var sh = (typeof SHOP !== 'undefined' && SHOP.sheets[pid]) || {}; return sh.categorie || null; }
+  function promosFor(pid){ var c = promoCat(pid); return PROMOS.filter(function(p){ return (!p.product_id || p.product_id === pid) && (!p.categorie || p.categorie === c); }); }
+  function lineInfo(pid, g){
+    var base = Math.round(pricePerGram(pid, g) * g * 100) / 100, best = base, name = null;
+    promosFor(pid).forEach(function(p){
+      var t = null;
+      if(p.type === 'pourcent' && g >= Number(p.grammes_min || 0)) t = Math.round(base * (1 - Number(p.pourcent) / 100) * 100) / 100;
+      if(p.type === 'lot' && g >= Number(p.grammes)) t = Math.round(g * Number(p.prix_lot) / Number(p.grammes) * 100) / 100;
+      if(t != null && t < best){ best = t; name = p.nom; }
+    });
+    return { base: base, total: best, promo: name };
+  }
   function cartTotal(){
     var total = 0;
-    Object.keys(cart).forEach(function(pid){
-      total += pricePerGram(pid, cart[pid]) * cart[pid];
-    });
-    return total;
+    Object.keys(cart).forEach(function(pid){ total += lineInfo(pid, cart[pid]).total; });
+    return Math.round(total * 100) / 100;
   }
 
   function renderCart(){
@@ -2018,8 +2068,8 @@
 
     wrap.innerHTML = ids.map(function(pid){
       var grams = cart[pid];
-      var rate = pricePerGram(pid, grams);
-      var lineTotal = (rate * grams).toFixed(2).replace('.', ',');
+      var rate = pricePerGram(pid, grams), li = lineInfo(pid, grams);
+      var lineTotal = li.total.toFixed(2).replace('.', ',');
       return '<div class="cart-item">'
         + '<div>'
           + '<div class="cart-item-name">' + PRODUCTS[pid].name + '</div>'
@@ -2030,7 +2080,7 @@
           + '</div>'
           + '<button type="button" class="cart-item-remove" data-product="' + pid + '">Retirer</button>'
         + '</div>'
-        + '<div>' + lineTotal + ' €<br><span style="font-size:11px;">' + rate + ' €/g</span></div>'
+        + '<div style="text-align:right;">' + (li.promo ? '<s style="font-size:11px; opacity:.6;">' + li.base.toFixed(2).replace('.', ',') + ' €</s><br>' : '') + lineTotal + ' €<br><span style="font-size:11px;">' + (li.promo ? '<span style="color:var(--moss);">🔥 ' + li.promo.replace(/</g, '&lt;') + '</span>' : rate + ' €/g') + '</span></div>'
       + '</div>';
     }).join('');
 
@@ -2177,7 +2227,42 @@
   function tiersHtml(t){
     return t.map(function(x, i){ return '<div><span>' + x[0] + ' g</span><b>' + String(x[1]).replace('.', ',') + (i === 0 ? ' €' : ' €/g') + '</b></div>'; }).join('');
   }
+  // Variétés ajoutées depuis l'admin (pas encore de carte écrite dans la page) : carte créée automatiquement
+  function addMissingCards(rows){
+    var grid = document.querySelector('.grid-products'); if(!grid) return 0; var n = 0;
+    (rows || []).slice().sort(function(a, b){ return (a.ordre || 100) - (b.ordre || 100); }).forEach(function(r){
+      var pid = r.product_id;
+      if(r.visible === false || document.querySelector('.cart-add-btn[data-product="' + pid + '"]')) return;
+      var t = Array.isArray(r.prix_paliers) && r.prix_paliers.length ? r.prix_paliers.map(function(x){ return [Number(x[0]), Number(x[1])]; })
+            : (Number(r.prix_1g) > 0 ? [[1, Number(r.prix_1g)]] : null);
+      if(!t) return;                                   // pas de prix : on n'affiche pas
+      t.sort(function(a, b){ return a[0] - b[0]; });
+      PRODUCTS[pid] = { name: r.nom, tiers: t };
+      var res = r.categorie === 'resine';
+      var photo = r.photo_url || ('premium/' + (res ? 'resine-1' : 'fleur-1') + '.jpg');
+      var taux = r.thv_pct != null ? 'THV ' + String(Number(r.thv_pct)).replace('.', ',') + ' %' : (r.cbd_pct != null ? 'CBD ' + String(Number(r.cbd_pct)).replace('.', ',') + ' %' : (r.taux || ''));
+      var card = document.createElement('div'); card.className = 'card reveal visible in';
+      card.innerHTML = '<div class="pc-ph" style="background-image:url(\'' + escH(photo) + '\')">' + (taux ? '<span class="pc-tag">' + escH(taux) + '</span>' : '') + '</div>'
+        + '<span class="card-tag">' + (res ? 'Résine' : 'Fleurs') + (r.nouveau ? ' · Nouveau' : '') + '</span>'
+        + '<h3>' + escH(r.nom) + '</h3>'
+        + (taux ? '<div class="thv-stat">' + escH(taux) + '</div>' : '')
+        + '<div class="card-stats"><span>THC <b>&lt;0,3%</b></span></div>'
+        + (r.aromes ? '<div class="card-stats"><span>' + escH(r.aromes) + '</span></div>' : '')
+        + '<div class="price-tiers">' + tiersHtml(t) + '</div>'
+        + '<div class="cart-add-row"><input type="number" min="1" step="1" value="1" class="cart-qty-input" id="qty-' + escH(pid) + '"><button type="button" class="btn btn-dark cart-add-btn" data-product="' + escH(pid) + '" data-name="' + escH(r.nom) + '">Ajouter au panier</button></div>'
+        + '<div class="card-foot"><span class="price">dès ' + String(Math.min.apply(null, t.map(function(x){ return x[1]; }))).replace('.', ',') + '&nbsp;€/g</span>'
+        + '<a href="' + escH(r.coa_url || ('coa-' + pid + '.pdf')) + '" target="_blank" rel="noopener" class="link-arrow">Cliquer pour voir l\'analyse →</a></div>';
+      grid.appendChild(card);
+      card.querySelector('.cart-add-btn').addEventListener('click', function(){
+        var g = parseInt(document.getElementById('qty-' + pid).value, 10); if(!g || g <= 0) g = 1;
+        cart[pid] = (cart[pid] || 0) + g; renderCart(); openCart();
+      });
+      n++;
+    });
+    return n;
+  }
   function applySheets(rows){
+    if(addMissingCards(rows)) loadAvailability(1);
     (rows || []).forEach(function(r){
       SHOP.sheets[r.product_id] = r;
       var btn = document.querySelector('.cart-add-btn[data-product="' + r.product_id + '"]');
@@ -2240,14 +2325,60 @@
       var r = await Promise.all([
         sb.from('expedition_config').select('*').eq('id', 1).maybeSingle(),
         sb.from('menu_produits').select('*'),
+        sb.from('menu_jour').select('*').eq('id', 1).maybeSingle(),
+        sb.from('promos').select('*'),
         fetch('/.netlify/functions/shop-config').then(function(x){ return x.ok ? x.json() : {}; }).catch(function(){ return {}; })
       ]);
-      SHOP.payOnline = !!(r[2] && r[2].paiement_en_ligne);
+      SHOP.payOnline = !!(r[4] && r[4].paiement_en_ligne);
+      if(r[3] && !r[3].error) PROMOS = r[3].data || [];
       if(!r[1].error) applySheets(r[1].data);
+      showPromoBadges();
       if(!r[0].error) applyExp(r[0].data);
+      if(r[2] && !r[2].error) renderMenuDuJour(r[2].data);
     }catch(e){ console.warn('Config boutique indisponible', e); }
   }
   loadShopConfig(10);
+
+  // ----- Promos visibles sur les cartes produits -----
+  function showPromoBadges(){
+    document.querySelectorAll('.cart-add-btn[data-product]').forEach(function(btn){
+      var pid = btn.dataset.product, card = btn.closest('.card'); if(!card) return;
+      var old = card.querySelector('.promo-line'); if(old) old.remove();
+      var ps = promosFor(pid); if(!ps.length) return;
+      var el = document.createElement('div'); el.className = 'promo-line';
+      el.innerHTML = ps.map(function(p){ return '<span>🔥 ' + escH(p.nom) + (p.date_fin ? ' <small>jusqu\'au ' + p.date_fin.split('-').reverse().slice(0, 2).join('/') + '</small>' : '') + '</span>'; }).join('');
+      var tiers = card.querySelector('.price-tiers'); tiers.parentNode.insertBefore(el, tiers.nextSibling);
+      var tag = card.querySelector('.pc-tag'); if(tag && !card.querySelector('.pc-promo')){ var b = document.createElement('span'); b.className = 'pc-promo'; b.textContent = 'PROMO'; tag.parentNode.appendChild(b); }
+    });
+    renderCart();
+  }
+
+  // ----- Menu du jour (même contenu que sur la page menu) -----
+  function renderMenuDuJour(j){
+    var box = document.getElementById('mdj');
+    var pid = j && j.product_id, sh = pid ? SHOP.sheets[pid] : null, prod = pid ? PRODUCTS[pid] : null;
+    var show = !!(j && j.actif !== false && (j.texte || j.promo || prod));
+    box.hidden = !show; if(!show) return;
+    var name = (sh && sh.nom) || (prod && prod.name) || '';
+    document.getElementById('mdj-tag').textContent = j.titre || 'Le menu du jour';
+    document.getElementById('mdj-title').textContent = name || (j.titre || 'Le menu du jour');
+    document.getElementById('mdj-text').textContent = j.texte || '';
+    var pr = document.getElementById('mdj-promo'); pr.textContent = j.promo || ''; pr.hidden = !j.promo;
+    var card = pid && document.querySelector('.cart-add-btn[data-product="' + pid + '"]');
+    card = card && card.closest('.card');
+    var ph = card && card.querySelector('.pc-ph');
+    var photo = (sh && sh.photo_url) || (ph && ph.style.backgroundImage) || '';
+    var phEl = document.getElementById('mdj-ph');
+    if(photo){ phEl.style.backgroundImage = /^url\(/.test(photo) ? photo : 'url("' + photo + '")'; phEl.hidden = false; } else phEl.hidden = true;
+    var add = document.getElementById('mdj-add'), shb = document.getElementById('mdj-sheet');
+    var dispo = card && !card.querySelector('.cart-add-btn').disabled;
+    add.hidden = !prod; shb.hidden = !prod;
+    if(prod){
+      add.disabled = !dispo; add.textContent = dispo ? 'Ajouter 1 g au panier' : 'Rupture';
+      add.onclick = function(){ cart[pid] = (cart[pid] || 0) + 1; renderCart(); openCart(); };
+      shb.onclick = function(){ openSheet(pid); };
+    }
+  }
 
   // ----- Fiche produit -----
   function pct(v, d){ return v == null || v === '' ? null : String(Number(v)).replace('.', ',') + ' %'; }

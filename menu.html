@@ -6,27 +6,28 @@
 <title>Le menu — Smok'house CBD</title>
 <meta name="description" content="Le menu Smok'house : fleurs et résines CBD, commande au comptoir, livraison le jour même au Puy-en-Velay.">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#11140D">
+<meta name="theme-color" content="#0B0907">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --slate:#151912; --slate-2:#1C2117; --slate-3:#252C1E;
-    --chalk:#EFEBDC; --chalk-soft:#B9B49E; --chalk-dim:#7F7B68;
-    --lime:#8FE24C; --lime-deep:#5B9A2E; --amber:#F0A94E; --red:#F26B5B;
-    --line:rgba(239,235,220,.14); --line-strong:rgba(239,235,220,.26);
+    --slate:#14100C; --slate-2:#1A140F; --slate-3:#221A13;
+    --chalk:#F4ECDD; --chalk-soft:#BFB3A0; --chalk-dim:#857A6A;
+    --lime:#2FE07F; --lime-deep:#13A458; --amber:#E9B86C; --red:#E0533F;
+    --gold:#E9B86C; --gold-deep:#C8913F; --line-gold:rgba(233,184,108,.45);
+    --line:rgba(244,236,221,.14); --line-strong:rgba(244,236,221,.26);
     --wood-1:#5A3B22; --wood-2:#7A5332; --wood-3:#3F2816;
-    --ink:#11140D;
+    --ink:#0B0907;
     --safe-bot:env(safe-area-inset-bottom);
   }
   *{margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html{scroll-behavior:smooth;}
   body{
-    min-height:100vh; color:var(--chalk); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.45;
+    min-height:100vh; color:var(--chalk); font-family:'Outfit',system-ui,sans-serif; font-size:15px; line-height:1.45;
     background-color:#0E100B;
     background-image:
       radial-gradient(ellipse 80% 50% at 15% 0%, rgba(239,235,220,.06), transparent 60%),
@@ -39,16 +40,16 @@
   input:focus,textarea:focus{outline:2px solid var(--lime); outline-offset:1px;}
   a{color:inherit;}
   [hidden]{display:none !important;}
-  .hand{font-family:'Caveat',cursive; font-weight:700; letter-spacing:.01em;}
-  .mono{font-family:'IBM Plex Mono',monospace;}
+  .hand{font-family:'Playfair Display',serif; font-weight:700; letter-spacing:.01em;}
+  .mono{font-family:'Outfit',sans-serif;}
 
   /* ---------- en-tête ---------- */
   .top{max-width:860px; margin:0 auto; padding:18px 16px 8px; display:flex; align-items:center; justify-content:space-between; gap:12px;}
-  .logo{font-family:'Caveat',cursive; font-weight:700; font-size:32px; line-height:1; text-decoration:none;}
+  .logo{font-family:'Playfair Display',serif; font-weight:700; font-size:32px; line-height:1; text-decoration:none;}
   .logo span{color:var(--lime);}
-  .logo small{display:block; font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--chalk-dim); margin-top:4px;}
+  .logo small{display:block; font-family:'Outfit',sans-serif; font-weight:400; font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--chalk-dim); margin-top:4px;}
   .who{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--chalk-soft); text-align:right;}
-  .pts{font-family:'IBM Plex Mono',monospace; color:var(--lime); border:1px solid rgba(143,226,76,.4); border-radius:20px; padding:4px 10px; font-size:12px; white-space:nowrap;}
+  .pts{font-family:'Outfit',sans-serif; color:var(--lime); border:1px solid rgba(143,226,76,.4); border-radius:20px; padding:4px 10px; font-size:12px; white-space:nowrap;}
   .linkbtn{color:var(--chalk-soft); text-decoration:underline; text-underline-offset:3px; font-size:13px;}
 
   /* ---------- ardoise avec cadre bois ---------- */
@@ -70,8 +71,8 @@
 
   /* ---------- menu du jour ---------- */
   .special{border:2px dashed rgba(143,226,76,.45); border-radius:14px; padding:16px; margin-bottom:22px; position:relative; background:rgba(143,226,76,.04);}
-  .special-tag{position:absolute; top:-13px; left:16px; background:var(--slate-2); padding:0 8px; font-family:'Caveat',cursive; font-weight:700; font-size:22px; color:var(--lime); line-height:1.1;}
-  .special h2{font-family:'Caveat',cursive; font-weight:700; font-size:30px; line-height:1.05; margin:4px 0 6px;}
+  .special-tag{position:absolute; top:-13px; left:16px; background:var(--slate-2); padding:0 8px; font-family:'Playfair Display',serif; font-weight:700; font-size:22px; color:var(--lime); line-height:1.1;}
+  .special h2{font-family:'Playfair Display',serif; font-weight:700; font-size:30px; line-height:1.05; margin:4px 0 6px;}
   .special p{color:var(--chalk-soft); font-size:14px;}
   .special .promo{display:inline-block; margin-top:10px; background:var(--amber); color:var(--ink); font-weight:600; font-size:13px; padding:5px 10px; border-radius:6px; transform:rotate(-1.2deg);}
   .special .row-item{margin-top:12px; border-top:1px dashed var(--line); padding-top:12px;}
@@ -85,7 +86,7 @@
 
   /* ---------- sections ---------- */
   .sec{margin-top:18px; scroll-margin-top:60px;}
-  .sec-title{display:flex; align-items:center; gap:10px; font-family:'Caveat',cursive; font-weight:700; font-size:36px; line-height:1;}
+  .sec-title{display:flex; align-items:center; gap:10px; font-family:'Playfair Display',serif; font-weight:700; font-size:36px; line-height:1;}
   .sec-title svg{width:28px; height:28px; color:var(--lime);}
   .chalk-line{height:8px; margin:6px 0 4px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='8' viewBox='0 0 300 8'%3E%3Cpath d='M2 5 C 40 2, 80 7, 120 4 S 200 2, 240 5 S 290 4, 298 3' fill='none' stroke='%23EFEBDC' stroke-opacity='.35' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") left center/300px 8px no-repeat;}
   .sec-note{font-size:12.5px; color:var(--chalk-dim); margin-bottom:6px;}
@@ -98,8 +99,8 @@
   .photo img{width:100%; height:100%; object-fit:cover;}
   .photo svg{width:30px; height:30px;}
   .name-line{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
-  .name{font-family:'Caveat',cursive; font-weight:700; font-size:28px; line-height:1;}
-  .badge{font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; padding:3px 7px; border-radius:4px; display:inline-flex; align-items:center; gap:4px; transform:translateY(-3px);}
+  .name{font-family:'Playfair Display',serif; font-weight:700; font-size:28px; line-height:1;}
+  .badge{font-family:'Outfit',sans-serif; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; padding:3px 7px; border-radius:4px; display:inline-flex; align-items:center; gap:4px; transform:translateY(-3px);}
   .badge svg{width:11px; height:11px;}
   .b-top{background:var(--amber); color:var(--ink);}
   .b-new{background:var(--lime); color:var(--ink);}
@@ -109,13 +110,13 @@
   .profil.indica{border-color:rgba(160,140,255,.55); color:#C9BEFF;}
   .profil.sativa{border-color:rgba(240,169,78,.6); color:#F7C98A;}
   .profil.hybride{border-color:rgba(143,226,76,.5); color:#BDEB95;}
-  .taux{font-family:'IBM Plex Mono',monospace; color:var(--chalk);}
-  .aromes{font-family:'Caveat',cursive; font-size:19px; color:var(--chalk-soft); line-height:1.1;}
+  .taux{font-family:'Outfit',sans-serif; color:var(--chalk);}
+  .aromes{font-family:'Playfair Display',serif; font-size:19px; color:var(--chalk-soft); line-height:1.1;}
   .prices{grid-column:1 / -1; display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-top:2px;}
   .price{border:1px solid rgba(143,226,76,.35); border-radius:10px; padding:7px 4px 6px; text-align:center; transition:transform .12s, background .2s;}
-  .price .g{display:block; font-size:11px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;}
-  .price .e{display:block; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:15px; color:var(--lime);}
-  .price .u{display:block; font-size:10px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;}
+  .price .g{display:block; font-size:11px; color:var(--chalk-dim); font-family:'Outfit',sans-serif;}
+  .price .e{display:block; font-family:'Outfit',sans-serif; font-weight:600; font-size:15px; color:var(--lime);}
+  .price .u{display:block; font-size:10px; color:var(--chalk-dim); font-family:'Outfit',sans-serif;}
   .price:active{transform:scale(.95);}
   .price.added{background:var(--lime); border-color:var(--lime);}
   .price.added .e, .price.added .g, .price.added .u{color:var(--ink);}
@@ -127,13 +128,13 @@
     .prices{grid-column:auto; grid-template-columns:repeat(4, 74px); margin-top:0;}
     .info{position:relative;}
   }
-  .tap-hint{font-family:'Caveat',cursive; font-size:20px; color:var(--chalk-dim); text-align:center; margin-top:16px;}
+  .tap-hint{font-family:'Playfair Display',serif; font-size:20px; color:var(--chalk-dim); text-align:center; margin-top:16px;}
 
   /* ---------- barre panier ---------- */
   .bar{position:fixed; left:0; right:0; bottom:0; z-index:40; padding:10px 12px calc(10px + var(--safe-bot)); background:rgba(14,16,11,.94); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-top:1px solid var(--line);}
   .bar-in{max-width:860px; margin:0 auto; display:flex; align-items:center; gap:10px;}
   .bar-sum{flex:1; min-width:0; text-align:left;}
-  .bar-sum b{font-family:'IBM Plex Mono',monospace; font-size:19px; color:var(--lime); display:block;}
+  .bar-sum b{font-family:'Outfit',sans-serif; font-size:19px; color:var(--lime); display:block;}
   .bar-sum span{font-size:12.5px; color:var(--chalk-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;}
   .btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:10px; padding:13px 18px; font-weight:600; font-size:15px; min-height:48px;}
   .btn-lime{background:var(--lime); color:var(--ink);}
@@ -153,15 +154,15 @@
     transform:translateY(105%); transition:transform .25s ease, visibility 0s .25s; visibility:hidden;}
   .sheet.open{transform:translateY(0); visibility:visible; transition:transform .25s ease;}
   .grab{width:42px; height:4px; border-radius:2px; background:var(--line-strong); margin:0 auto 12px;}
-  .sheet h3{font-family:'Caveat',cursive; font-weight:700; font-size:32px; line-height:1; margin-bottom:12px;}
+  .sheet h3{font-family:'Playfair Display',serif; font-weight:700; font-size:32px; line-height:1; margin-bottom:12px;}
   .c-line{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line);}
-  .c-line .n{font-family:'Caveat',cursive; font-weight:700; font-size:23px; line-height:1;}
-  .qty{display:flex; align-items:center; gap:8px; margin-top:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--chalk-soft);}
+  .c-line .n{font-family:'Playfair Display',serif; font-weight:700; font-size:23px; line-height:1;}
+  .qty{display:flex; align-items:center; gap:8px; margin-top:4px; font-family:'Outfit',sans-serif; font-size:13px; color:var(--chalk-soft);}
   .qty button{width:30px; height:30px; border:1px solid var(--line-strong); border-radius:8px; font-size:16px;}
-  .c-line .p{text-align:right; font-family:'IBM Plex Mono',monospace;}
+  .c-line .p{text-align:right; font-family:'Outfit',sans-serif;}
   .c-line .p small{display:block; color:var(--chalk-dim); font-size:11px;}
-  .c-total{display:flex; justify-content:space-between; align-items:baseline; margin:12px 0 4px; font-family:'Caveat',cursive; font-size:28px; font-weight:700;}
-  .c-total b{font-family:'IBM Plex Mono',monospace; font-size:20px; color:var(--lime);}
+  .c-total{display:flex; justify-content:space-between; align-items:baseline; margin:12px 0 4px; font-family:'Playfair Display',serif; font-size:28px; font-weight:700;}
+  .c-total b{font-family:'Outfit',sans-serif; font-size:20px; color:var(--lime);}
   .field{display:flex; flex-direction:column; gap:6px; margin-bottom:12px;}
   .field label{font-size:12px; color:var(--chalk-soft);}
   .opts{display:flex; flex-direction:column; gap:8px;}
@@ -171,7 +172,7 @@
   .earn{font-size:13px; color:var(--lime); margin:2px 0 12px;}
   .msg{font-size:14px; min-height:20px; margin-top:10px; color:var(--amber);}
   .msg.ok{color:var(--lime);}
-  .empty{color:var(--chalk-dim); text-align:center; padding:18px 0; font-family:'Caveat',cursive; font-size:22px;}
+  .empty{color:var(--chalk-dim); text-align:center; padding:18px 0; font-family:'Playfair Display',serif; font-size:22px;}
 
   /* ---------- toast ---------- */
   .toast{position:fixed; left:50%; bottom:calc(92px + var(--safe-bot)); transform:translate(-50%, 30px); opacity:0; z-index:70; background:var(--lime); color:var(--ink);
@@ -180,10 +181,64 @@
 
   /* ---------- âge ---------- */
   #gate{position:fixed; inset:0; z-index:100; background:#0E100B; display:flex; align-items:center; justify-content:center; text-align:center; padding:24px;}
-  #gate h2{font-family:'Caveat',cursive; font-size:38px; line-height:1.05; margin-bottom:10px;}
+  #gate h2{font-family:'Playfair Display',serif; font-size:38px; line-height:1.05; margin-bottom:10px;}
   #gate p{color:var(--chalk-soft); max-width:420px; margin:0 auto 22px; font-size:14px;}
   .test-ribbon{max-width:860px; margin:0 auto; padding:0 16px; font-size:11.5px; color:var(--chalk-dim);}
   @media (prefers-reduced-motion: reduce){*{animation:none !important; transition:none !important;}}
+
+  /* ================= HABILLAGE PREMIUM (même style que le site) ================= */
+  body{background:#0B0907; background-image:radial-gradient(ellipse 70% 40% at 50% 0%, rgba(233,184,108,.08), transparent 70%);}
+  .hand,.name,.sec-title,.special h2,.sheet h3,#gate h2,.c-line .n,.c-total{font-weight:700; letter-spacing:-.005em;}
+  .top{max-width:860px; padding:10px 16px 6px;}
+  .logo-img{display:block; width:170px; line-height:0;}
+  .logo-img img{width:100%; mix-blend-mode:screen; -webkit-mask-image:radial-gradient(ellipse 72% 70% at 50% 50%, #000 62%, transparent 100%); mask-image:radial-gradient(ellipse 72% 70% at 50% 50%, #000 62%, transparent 100%);}
+  .top-nav{display:flex; align-items:center; gap:14px;}
+  .top-nav a.back{color:var(--chalk); text-decoration:none; border:1.5px solid var(--line-gold); border-radius:30px; padding:7px 14px; font-size:14px;}
+  .pts{border-color:rgba(47,224,127,.5); box-shadow:0 0 10px rgba(47,224,127,.2);}
+  .test-ribbon{display:none;}
+  .menu-hero{max-width:860px; margin:4px auto 0; padding:0 16px;}
+  .menu-hero .kicker{font-size:13px; letter-spacing:.32em; text-transform:uppercase; color:var(--lime); font-weight:600;}
+  .menu-hero h1{font-family:'Playfair Display',serif; font-weight:700; font-size:clamp(34px,6vw,48px); line-height:1.05; margin-top:6px;}
+  .menu-hero h1 em{font-style:italic; color:var(--gold);}
+  .menu-hero p{color:var(--chalk-soft); margin-top:6px;}
+  /* carte au lieu de l'ardoise */
+  .board{margin-top:18px; border-radius:20px; border:1px solid var(--line-gold); background:linear-gradient(180deg, var(--slate-3), var(--slate-2));
+    box-shadow:0 0 0 1px rgba(233,184,108,.08), 0 14px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,220,160,.1); background-image:none;}
+  .board::before{display:none;}
+  @media (max-width:520px){ .board{margin:16px 12px 0;} }
+  .chalk-line{height:2px; background:linear-gradient(90deg, var(--gold), transparent); opacity:.6; margin:8px 0 6px;}
+  .sec-title{font-size:32px;} .sec-title svg{color:var(--gold);}
+  .cats{background:var(--slate-3); border-bottom:1px solid var(--line-gold);}
+  .cat-btn{border-color:var(--line-gold); color:var(--chalk); border-radius:24px;}
+  .cat-btn.on{border:2px solid var(--lime); color:var(--chalk); background:rgba(19,164,88,.22); box-shadow:0 0 14px rgba(47,224,127,.35);}
+  .special{border:1px solid var(--line-gold); border-style:solid; background:linear-gradient(135deg, rgba(233,184,108,.12), transparent 60%); border-radius:16px;}
+  .special-tag{background:var(--gold); color:#2A1A05; font-family:'Outfit',sans-serif; font-size:12.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:4px 12px; border-radius:20px; top:-12px;}
+  .special h2{font-size:28px;}
+  .special .promo{background:transparent; color:var(--lime); border:1.5px dashed var(--lime); transform:none; border-radius:10px;}
+  .name{font-size:23px;}
+  .photo{border:2px solid var(--line-gold); border-radius:14px;}
+  .aromes{font-family:'Outfit',sans-serif; font-style:italic; font-size:14px;}
+  .price{border:1.5px solid var(--line-gold); border-radius:14px; background:rgba(233,184,108,.05);}
+  .price .e{color:var(--gold); font-weight:700;}
+  .price .promo-u{color:var(--lime); font-weight:700;}
+  .price.added{background:var(--lime); border-color:var(--lime);}
+  .badge{border-radius:8px; font-family:'Outfit',sans-serif;}
+  .b-top{background:var(--gold); color:#2A1A05;}
+  .b-new{background:var(--lime); color:#03140A;}
+  .b-promo{background:var(--lime); color:#03140A; box-shadow:0 0 10px rgba(47,224,127,.5);}
+  .promo-l{display:inline-block; margin-top:6px; border:1.5px dashed rgba(47,224,127,.6); color:var(--lime); font-weight:600; font-size:13px; padding:3px 10px; border-radius:10px;}
+  .tap-hint{font-family:'Outfit',sans-serif; font-size:13px; letter-spacing:.06em;}
+  .empty{font-family:'Outfit',sans-serif; font-size:15px;}
+  .btn{border-radius:30px;}
+  .btn-lime{background:rgba(47,224,127,.12); color:var(--chalk); border:2px solid var(--lime); box-shadow:0 0 18px rgba(47,224,127,.32), inset 0 0 14px rgba(47,224,127,.14);}
+  .btn-line{border:1.5px solid var(--line-gold);}
+  .bar{background:rgba(11,9,7,.94); border-top:1px solid var(--line-gold);}
+  .bar-sum b{color:var(--gold);}
+  .c-total b{color:var(--gold);}
+  .sheet{background:var(--slate-2); border-top:1px solid var(--line-gold); border-radius:20px 20px 0 0;}
+  input,textarea{border-radius:12px;}
+  .field label{color:var(--gold); letter-spacing:.1em; text-transform:uppercase; font-size:11.5px;}
+  .toast{background:var(--lime); color:#03140A; border-radius:12px;}
 </style>
 </head>
 <body>
@@ -207,9 +262,17 @@
 </svg>
 
 <header class="top">
-  <a class="logo" href="/">Smok<span>'</span>house<small>Coffee shop · menu</small></a>
-  <div class="who" id="who"><button class="linkbtn" id="login-open">Se connecter</button></div>
+  <a class="logo-img" href="/" aria-label="Smok'House CBD — accueil"><img src="premium/logo.jpg" alt="Smok'House CBD"></a>
+  <div class="top-nav">
+    <a class="back" href="/">← Le site</a>
+    <div class="who" id="who"><button class="linkbtn" id="login-open">Se connecter</button></div>
+  </div>
 </header>
+<div class="menu-hero">
+  <p class="kicker">Smok'house CBD</p>
+  <h1>Le <em>menu</em></h1>
+  <p>Touche un prix pour l'ajouter au panier · livraison le jour même en Haute-Loire.</p>
+</div>
 <p class="test-ribbon">Version test de la carte — commandes réelles, livrées le jour même au Puy-en-Velay et en Haute-Loire.</p>
 
 <main class="board">
@@ -303,7 +366,20 @@ function prod(pid){
   };
 }
 function rate(pid, g){ const p = prod(pid); if(!p) return 0; let r = p.tiers[0][1]; p.tiers.forEach(([min, v]) => { if(g >= min) r = v; }); return r; }
-const linePrice = (pid, g) => rate(pid, g) * g;
+let PROMOS = [];
+// Meilleure promo en cours pour une ligne (même calcul que le serveur, qui reste seul juge du prix final)
+function lineInfo(pid, g){
+  const p = prod(pid), base = Math.round(rate(pid, g) * g * 100) / 100; let best = base, name = null;
+  PROMOS.filter(x => (!x.product_id || x.product_id === pid) && (!x.categorie || (p && x.categorie === p.cat))).forEach(x => {
+    let t = null;
+    if(x.type === 'pourcent' && g >= Number(x.grammes_min || 0)) t = Math.round(base * (1 - Number(x.pourcent) / 100) * 100) / 100;
+    if(x.type === 'lot' && g >= Number(x.grammes)) t = Math.round(g * Number(x.prix_lot) / Number(x.grammes) * 100) / 100;
+    if(t != null && t < best){ best = t; name = x.nom; }
+  });
+  return { base, total: best, promo: name };
+}
+const linePrice = (pid, g) => lineInfo(pid, g).total;
+const promosOf = (p) => PROMOS.filter(x => (!x.product_id || x.product_id === p.id) && (!x.categorie || x.categorie === p.cat));
 const cartTotal = () => Object.keys(cart).reduce((a, pid) => a + linePrice(pid, cart[pid]), 0);
 function allProducts(){
   const ids = new Set([...Object.keys(PRODUCTS), ...Object.keys(menu)]);
@@ -319,11 +395,12 @@ function photoHtml(p){
 function itemHtml(p){
   const badges = (!p.dispo ? '<span class="badge b-out">Rupture</span>' : '')
     + (p.top ? '<span class="badge b-top"><svg><use href="#i-flame"/></svg>Top vente</span>' : '')
-    + (p.nouveau ? '<span class="badge b-new"><svg><use href="#i-star"/></svg>Nouveau</span>' : '');
+    + (p.nouveau ? '<span class="badge b-new"><svg><use href="#i-star"/></svg>Nouveau</span>' : '')
+    + (promosOf(p).length ? '<span class="badge b-promo">Promo</span>' : '');
   const prices = PALIERS.map(g => {
     const total = linePrice(p.id, g);
     return `<button class="price" data-add="${esc(p.id)}" data-g="${g}" ${p.dispo ? '' : 'disabled'} aria-label="Ajouter ${g} g de ${esc(p.name)} pour ${eur(total)}">
-      <span class="g">${g} g</span><span class="e">${eurShort(total)}</span>${g > 1 ? `<span class="u">${eurShort(rate(p.id, g))}/g</span>` : '<span class="u">&nbsp;</span>'}</button>`;
+      <span class="g">${g} g</span><span class="e">${eurShort(total)}</span>${lineInfo(p.id, g).promo ? '<span class="u promo-u">promo</span>' : g > 1 ? `<span class="u">${eurShort(total / g)}/g</span>` : '<span class="u">&nbsp;</span>'}</button>`;
   }).join('');
   return `<div class="item ${p.dispo ? '' : 'out'}">
     ${photoHtml(p)}
@@ -331,6 +408,7 @@ function itemHtml(p){
       <div class="name-line"><span class="name">${esc(p.name)}</span>${badges}</div>
       <div class="meta">${p.profil ? `<span class="profil ${esc(p.profil)}">${esc(p.profil)}</span>` : ''}${p.taux ? `<span class="taux">${esc(p.taux)}</span>` : ''}</div>
       ${p.aromes ? `<div class="aromes">${esc(p.aromes)}</div>` : ''}
+      ${promosOf(p).map(x => `<div class="promo-l">🔥 ${esc(x.nom)}</div>`).join('')}
     </div>
     <div class="prices">${prices}</div>
   </div>`;
@@ -402,7 +480,7 @@ function cartLinesHtml(){
     return `<div class="c-line"><div><div class="n">${esc(p ? p.name : pid)}</div>
       <div class="qty"><button data-dec="${esc(pid)}" aria-label="Moins">−</button><span>${gfmt(g)}</span><button data-inc="${esc(pid)}" aria-label="Plus">+</button>
       <button data-rm="${esc(pid)}" style="width:auto; border:0; text-decoration:underline; font-size:12px; color:var(--chalk-dim); margin-left:6px;">retirer</button></div></div>
-      <div class="p">${eur(linePrice(pid, g))}<small>${eurShort(rate(pid, g))}/g</small></div></div>`; }).join('');
+      <div class="p">${lineInfo(pid, g).promo ? `<s style="font-size:11px; opacity:.6;">${eur(lineInfo(pid, g).base)}</s><br>` : ''}${eur(linePrice(pid, g))}<small>${lineInfo(pid, g).promo ? '🔥 ' + esc(lineInfo(pid, g).promo) : eurShort(rate(pid, g)) + '/g'}</small></div></div>`; }).join('');
 }
 function openCheckout(){
   const loggedIn = !!(user && profile);
@@ -554,11 +632,13 @@ async function boot(){
   if(!window.supabase){ setTimeout(boot, 400); return; }
   if(sb) return;
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const [m, j, s, t, f, sess] = await Promise.all([
+  const [m, j, s, t, f, sess, pr] = await Promise.all([
     sb.from('menu_produits').select('*'),
     sb.from('menu_jour').select('*').eq('id', 1).maybeSingle(),
-    sb.rpc('public_stock'), sb.rpc('top_ventes'), sb.rpc('fidelite_public'), sb.auth.getSession()
+    sb.rpc('public_stock'), sb.rpc('top_ventes'), sb.rpc('fidelite_public'), sb.auth.getSession(),
+    sb.from('promos').select('*')
   ]);
+  if(pr && !pr.error && pr.data) PROMOS = pr.data;
   if(!m.error && m.data) m.data.forEach(r => { menu[r.product_id] = r; });
   if(!j.error) special = j.data;
   if(!s.error && s.data) s.data.forEach(r => { stock[r.id] = r.available; });

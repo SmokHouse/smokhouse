@@ -32,6 +32,8 @@ alter table public.orders add column if not exists tracking_sent_at   timestampt
 alter table public.orders add column if not exists invoice_sent_at    timestamptz;
 alter table public.orders add column if not exists facture_erreur     text;          -- si la facture automatique n'a pas pu être émise
 alter table public.orders add column if not exists updated_at         timestamptz;
+alter table public.orders add column if not exists remise             numeric(10,2) not null default 0;  -- remise accordée à la main par l'admin
+alter table public.orders add column if not exists remise_motif       text;
 
 do $$ begin
   alter table public.orders add constraint orders_mode_chk check (mode in ('local', 'france'));
@@ -212,6 +214,59 @@ $$;
 grant execute on function public.public_stock() to anon, authenticated;
 
 -- ---------------------------------------------------------------------
+-- 5 bis) PROMOS automatiques (appliquées par le serveur)
+--   type « pourcent » : -X % sur un produit / une catégorie / tout, dès N grammes
+--   type « lot »      : « X g pour Y € » (le prix au gramme du lot s'applique dès X g)
+-- ---------------------------------------------------------------------
+create table if not exists public.promos (
+  id          bigserial primary key,
+  nom         text not null,                       -- affiché au client, ex : « 10 g = 90 € »
+  product_id  text,                                -- null = tous les produits (ou la catégorie)
+  categorie   text check (categorie in ('fleur', 'resine')),
+  type        text not null check (type in ('pourcent', 'lot')),
+  pourcent    numeric(5,2),                        -- type pourcent : 10 = -10 %
+  grammes     numeric(10,2),                       -- type lot : 10 (g)
+  prix_lot    numeric(10,2),                       -- type lot : 90 (€)
+  grammes_min numeric(10,2) not null default 0,    -- type pourcent : à partir de N g
+  date_debut  date,
+  date_fin    date,
+  actif       boolean not null default true,
+  created_at  timestamptz not null default now(),
+  check ((type = 'pourcent' and pourcent > 0 and pourcent < 100) or (type = 'lot' and grammes > 0 and prix_lot > 0))
+);
+alter table public.promos enable row level security;
+grant select on public.promos to anon, authenticated;
+grant insert, update, delete on public.promos to authenticated;
+grant usage, select on sequence public.promos_id_seq to authenticated;
+drop policy if exists promos_lecture on public.promos;
+create policy promos_lecture on public.promos for select using (
+  actif and (date_debut is null or date_debut <= (now() at time zone 'Europe/Paris')::date)
+        and (date_fin is null or date_fin >= (now() at time zone 'Europe/Paris')::date));
+drop policy if exists promos_admin on public.promos;
+create policy promos_admin on public.promos for all using (public.is_admin()) with check (public.is_admin());
+
+-- Prix d'une ligne avec la meilleure promo en cours → {base, total, promo}
+create or replace function public.prix_ligne(p_product text, p_grams numeric)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare px numeric; base numeric; best numeric; nom text; pr record; t numeric; cat text; today date := (now() at time zone 'Europe/Paris')::date;
+begin
+  px := public.prix_gramme(p_product, p_grams);
+  if px is null then return null; end if;
+  base := round(px * p_grams, 2); best := base;
+  select coalesce(m.categorie, p.category) into cat from public.products p left join public.menu_produits m on m.product_id = p.id where p.id = p_product;
+  for pr in select * from public.promos
+             where actif and (date_debut is null or date_debut <= today) and (date_fin is null or date_fin >= today)
+               and (product_id is null or product_id = p_product) and (categorie is null or categorie = cat) loop
+    t := null;
+    if pr.type = 'pourcent' and p_grams >= pr.grammes_min then t := round(base * (1 - pr.pourcent / 100), 2); end if;
+    if pr.type = 'lot' and p_grams >= pr.grammes then t := round(p_grams * pr.prix_lot / pr.grammes, 2); end if;
+    if t is not null and t < best then best := t; nom := pr.nom; end if;
+  end loop;
+  return jsonb_build_object('base', base, 'total', best, 'promo', nom, 'prix_g', px);
+end; $$;
+grant execute on function public.prix_ligne(text, numeric) to anon, authenticated, service_role;
+
+-- ---------------------------------------------------------------------
 -- 6) Création d'une commande — appelée UNIQUEMENT par la Netlify Function (clé service)
 --    Tout est recalculé ici : prix, port, total, stock, récompense fidélité.
 -- ---------------------------------------------------------------------
@@ -227,7 +282,7 @@ declare
   k text; gr numeric; pr record; mp record; px numeric; dispo numeric;
   lignes jsonb := '[]'::jsonb; txt text := ''; sous_total numeric := 0; port numeric := 0;
   cfg record; rw record; solde int; new_id text; adr jsonb; rel jsonb; addr_txt text; o record;
-  nb int := 0; v_carrier text;
+  nb int := 0; v_carrier text; pl jsonb;
 begin
   if v_mode not in ('local', 'france') then raise exception 'MODE_INVALIDE'; end if;
   if v_items is null or jsonb_typeof(v_items) <> 'object' or v_items = '{}'::jsonb then raise exception 'PANIER_VIDE'; end if;
@@ -248,12 +303,13 @@ begin
     if px is null or px <= 0 then raise exception 'PRIX_INCONNU:%', k; end if;
     dispo := pr.stock_grams - public.stock_reserve(k);
     if dispo < gr then raise exception 'STOCK_INSUFFISANT:%:%', k, greatest(floor(dispo), 0); end if;
+    pl := public.prix_ligne(k, gr);
     lignes := lignes || jsonb_build_object('product_id', k, 'designation', coalesce(mp.nom, pr.name),
                'categorie', coalesce(mp.categorie, pr.category), 'grammes', gr, 'prix_g', px,
-               'total', round(px * gr, 2), 'lot', mp.lot);
+               'base', (pl->>'base')::numeric, 'total', (pl->>'total')::numeric, 'promo', pl->>'promo', 'lot', mp.lot);
     txt := txt || case when txt = '' then '' else ', ' end || trim(to_char(gr, 'FM999990.0')) || 'g ' || coalesce(mp.nom, pr.name)
-           || ' (' || replace(to_char(round(px * gr, 2), 'FM999990.00'), '.', ',') || '€)';
-    sous_total := sous_total + round(px * gr, 2);
+           || ' (' || replace(to_char((pl->>'total')::numeric, 'FM999990.00'), '.', ',') || '€' || coalesce(' promo ' || (pl->>'promo'), '') || ')';
+    sous_total := sous_total + (pl->>'total')::numeric;
   end loop;
   txt := replace(txt, '.0g ', 'g ');
 
@@ -474,7 +530,8 @@ begin
   if jsonb_typeof(p_lignes) <> 'array' or jsonb_array_length(p_lignes) = 0 then raise exception 'LIGNES_VIDES'; end if;
   for l in select * from jsonb_array_elements(p_lignes) loop
     q := (l->>'quantite')::numeric; t := round((l->>'total')::numeric, 2);
-    if coalesce(btrim(l->>'designation'), '') = '' or q is null or q <= 0 or t is null or t < 0 then raise exception 'LIGNE_INVALIDE'; end if;
+    if coalesce(btrim(l->>'designation'), '') = '' or q is null or q <= 0 or t is null
+       or (t < 0 and not coalesce((l->>'remise')::boolean, false)) then raise exception 'LIGNE_INVALIDE'; end if;
     lignes_ok := lignes_ok || jsonb_build_object('designation', btrim(l->>'designation'), 'quantite', q, 'unite', coalesce(l->>'unite', 'g'),
                                                  'prix_unitaire', round(t / q, 4), 'total', t);
     tot := tot + t;
@@ -524,7 +581,7 @@ begin
   if o.lignes_json is not null and jsonb_array_length(o.lignes_json) > 0 then
     for l in select value from jsonb_array_elements(o.lignes_json) loop
       lignes := lignes || jsonb_build_object('designation', 'CBD ' || case when l->>'categorie' = 'resine' then 'résine' else 'fleur' end
-                 || ' — ' || (l->>'designation') || coalesce(' (lot ' || nullif(l->>'lot', '') || ')', ''),
+                 || ' — ' || (l->>'designation') || coalesce(' (lot ' || nullif(l->>'lot', '') || ')', '') || coalesce(' — promo ' || nullif(l->>'promo', ''), ''),
                  'quantite', (l->>'grammes')::numeric, 'unite', 'g', 'total', (l->>'total')::numeric);
     end loop;
   elsif o.items_json is not null then
@@ -543,6 +600,10 @@ begin
       lignes := lignes || jsonb_build_object('designation', 'Offert (ticket bonus) — ' || coalesce((select nom from public.menu_produits where product_id = k), k),
                                              'quantite', gr, 'unite', 'g', 'total', 0);
     end loop;
+  end if;
+  if coalesce(o.remise, 0) > 0 then
+    lignes := lignes || jsonb_build_object('designation', 'Remise commerciale' || coalesce(' (' || nullif(o.remise_motif, '') || ')', ''),
+                                           'quantite', 1, 'unite', 'u', 'total', -o.remise, 'remise', true);
   end if;
   if o.reward_label is not null and not o.reward_refunded then
     lignes := lignes || jsonb_build_object('designation', 'Cadeau fidélité : ' || o.reward_label, 'quantite', 1, 'unite', 'u', 'total', 0);
@@ -613,7 +674,7 @@ begin
   if new.status = 'terminee' and old.status is distinct from 'terminee'
      and new.customer_id is not null and not old.points_credited then
     select points_par_euro into rate from public.fidelite_config where id = 1;
-    pts := floor(coalesce(new.subtotal, new.total, 0) * coalesce(rate, 1))::int;
+    pts := floor(greatest(coalesce(new.subtotal, new.total, 0) - coalesce(new.remise, 0), 0) * coalesce(rate, 1))::int;
     if pts > 0 then update public.profiles set points = points + pts where id = new.customer_id; end if;
     new.points_earned := pts; new.points_credited := true;
   end if;
@@ -631,6 +692,38 @@ begin
   return new;
 end; $$;
 
+-- ---------------------------------------------------------------------
+-- 10 bis) Remise à la main sur une commande AVANT livraison / paiement (admin)
+--   ex : 10 g à 100 € → tu fixes le total à 90 €. Remettre le total d'origine annule la remise.
+-- ---------------------------------------------------------------------
+create or replace function public.admin_remise_commande(p_order text, p_total numeric, p_motif text default null)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare o record; brut numeric; r numeric;
+begin
+  if not public.is_admin() then raise exception 'NOT_ADMIN'; end if;
+  select * into o from public.orders where id::text = p_order for update;
+  if o is null then raise exception 'ORDER_NOT_FOUND'; end if;
+  if not ((coalesce(o.mode, 'local') = 'local' and coalesce(o.status, 'en_attente') in ('en_attente', 'en_cours', 'confirmee', 'en_livraison'))
+          or (o.mode = 'france' and o.status = 'attente_paiement' and o.payment_status <> 'paid')) then
+    raise exception 'REMISE_IMPOSSIBLE';
+  end if;
+  brut := coalesce(o.subtotal, o.total, 0) + coalesce(o.shipping_cost, 0);
+  if o.subtotal is null then brut := coalesce(o.total, 0) + coalesce(o.remise, 0); end if;
+  p_total := round(p_total, 2);
+  if p_total is null or p_total <= 0 or p_total > brut then raise exception 'MONTANT_INVALIDE'; end if;
+  r := brut - p_total;
+  update public.orders
+     set remise = r, remise_motif = case when r > 0 then nullif(btrim(coalesce(p_motif, '')), '') end, total = p_total,
+         items = regexp_replace(coalesce(items, ''), ' — Total : .*$', '') || ' — Total : ' || replace(to_char(p_total, 'FM999990.00'), '.', ',') || '€'
+                 || case when r > 0 then ' (remise -' || replace(to_char(r, 'FM999990.00'), '.', ',') || '€)' else '' end,
+         updated_at = now()
+   where id::text = p_order;
+  select * into o from public.orders where id::text = p_order;
+  return to_jsonb(o) || jsonb_build_object('id', p_order);
+end; $$;
+revoke all on function public.admin_remise_commande(text, numeric, text) from public, anon;
+grant execute on function public.admin_remise_commande(text, numeric, text) to authenticated;
+
 -- complete_order (bouton « Livrée ✓ » de l'admin) : passe par les mêmes règles
 create or replace function public.complete_order(p_order text)
 returns void language plpgsql security definer set search_path = public as $$
@@ -643,6 +736,6 @@ grant execute on function public.complete_order(text) to authenticated;
 -- Fonctions internes : jamais appelables depuis le site
 revoke all on function public.facture_prochain_rang(int) from public, anon, authenticated;
 
-select 'Boutique prête' as statut,
+select 'Boutique prête (promos + remises)' as statut,
        (select actif from public.expedition_config where id = 1) as expedition_active,
        (select count(*) from public.menu_produits where prix_paliers is not null) as produits_avec_prix;

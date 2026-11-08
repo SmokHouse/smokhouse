@@ -1,6 +1,6 @@
 /* Smok'house — service worker (app client + app admin)
    Change CACHE_VERSION à chaque mise en ligne importante pour forcer la mise à jour. */
-const CACHE_VERSION = 'smokhouse-v3-premium';
+const CACHE_VERSION = 'smokhouse-v5-promos';
 const PRECACHE = [
   '/', '/index.html', '/manifest.webmanifest', '/offline.html',
   '/admin/', '/admin/index.html', '/admin/manifest.webmanifest',
