@@ -1670,7 +1670,7 @@
       // fusionne le panier sauvegardé sur le compte avec ce qui est déjà dans le panier local
       var savedCart = data.cart || {};
       Object.keys(savedCart).forEach(function(pid){
-        if(PRODUCTS[pid]) cart[pid] = (cart[pid] || 0) + savedCart[pid];
+        if(PRODUCTS[pid]) cart[pid] = Math.max(cart[pid] || 0, Number(savedCart[pid]) || 0);
       });
       renderCart();
       saveCartToAccount();
@@ -2020,6 +2020,19 @@
   }
 
   var cart = {}; // { productId: grams }
+  // Panier UNIQUE partagé avec la page menu (gardé sur cet appareil)
+  var pendingCart = {};
+  try{
+    pendingCart = JSON.parse(localStorage.getItem('sh_cart') || 'null') || JSON.parse(localStorage.getItem('sh_menu_cart') || '{}') || {};
+    localStorage.removeItem('sh_menu_cart');
+  }catch(e){ pendingCart = {}; }
+  function restoreCart(){
+    Object.keys(pendingCart).forEach(function(pid){
+      var g = Number(pendingCart[pid]);
+      if(PRODUCTS[pid] && g > 0){ cart[pid] = Math.max(cart[pid] || 0, g); delete pendingCart[pid]; }
+    });
+  }
+  restoreCart();
 
   function cartCount(){
     return Object.keys(cart).length;
@@ -2198,7 +2211,7 @@
       document.getElementById('co-relay').style.display = selectedShip() === 'relais' ? 'flex' : 'none';
     }
   }
-  renderCart = (function(orig){ return function(){ orig(); updateSummary(); }; })(renderCart);
+  renderCart = (function(orig){ return function(){ orig(); updateSummary(); try{ localStorage.setItem('sh_cart', JSON.stringify(cart)); }catch(e){} }; })(renderCart);
 
   document.querySelectorAll('.mode-tab').forEach(function(t){
     t.addEventListener('click', function(){ if(!this.disabled) setMode(this.dataset.mode); });
@@ -2263,6 +2276,7 @@
   }
   function applySheets(rows){
     if(addMissingCards(rows)) loadAvailability(1);
+    restoreCart();
     (rows || []).forEach(function(r){
       SHOP.sheets[r.product_id] = r;
       var btn = document.querySelector('.cart-add-btn[data-product="' + r.product_id + '"]');
@@ -2338,6 +2352,19 @@
     }catch(e){ console.warn('Config boutique indisponible', e); }
   }
   loadShopConfig(10);
+
+  // Arrivée depuis la page menu (« Commander ») : on ouvre directement le panier et la validation
+  (function(){
+    if(new URLSearchParams(location.search).get('panier') !== '1') return;
+    try{ history.replaceState(null, '', location.pathname + location.hash); }catch(e){}
+    var tries = 0;
+    setTimeout(function go(){
+      if(!Object.keys(cart).length && Object.keys(pendingCart).length && tries++ < 20){ setTimeout(go, 300); return; }
+      var gate = document.getElementById('gate'); if(gate) gate.classList.add('hidden');
+      renderCart(); openCart();
+      if(Object.keys(cart).length && document.getElementById('cart-checkout').style.display !== 'block') document.getElementById('go-checkout').click();
+    }, 0);
+  })();
 
   // ----- Promos visibles sur les cartes produits -----
   function showPromoBadges(){
@@ -2467,7 +2494,8 @@
       var text = fr ? 'Commande n° ' + o.id + ' enregistrée (' + o.total_txt + ').' : 'Commande n° ' + o.id + ' envoyée ! Je te recontacte vite pour l\'heure de livraison.';
       if(o.reward_label) text += ' 🎁 ' + o.reward_label + ' ajouté (-' + o.reward_points + ' pts).';
       if(d.reward_warning) text += ' ' + d.reward_warning;
-      cart = {};
+      cart = {}; pendingCart = {};
+      try{ localStorage.setItem('sh_cart', '{}'); }catch(e){}
       saveCartToAccount();
       if(d.payment_url){
         msg.textContent = text + ' Redirection vers le paiement…';

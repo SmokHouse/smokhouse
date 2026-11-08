@@ -343,7 +343,7 @@ const ORDER = ['superlemonhaze', 'ogkush', 'piatella', 'caliplate', 'caligazberr
 let sb = null, user = null, profile = null, menu = {}, stock = {}, tops = [], special = null;
 let FID = { points_par_euro: 1, recompenses: [] }, fidOk = false, lastOrder = null;
 let cart = {};
-try{ cart = JSON.parse(localStorage.getItem('sh_menu_cart') || '{}') || {}; }catch(e){ cart = {}; }
+try{ cart = JSON.parse(localStorage.getItem('sh_cart') || 'null') || JSON.parse(localStorage.getItem('sh_menu_cart') || '{}') || {}; localStorage.removeItem('sh_menu_cart'); }catch(e){ cart = {}; }
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -435,7 +435,7 @@ function renderMenu(){
 }
 
 /* ---------- panier ---------- */
-function saveCart(){ try{ localStorage.setItem('sh_menu_cart', JSON.stringify(cart)); }catch(e){} }
+function saveCart(){ try{ localStorage.setItem('sh_cart', JSON.stringify(cart)); }catch(e){} }   // même panier que le site
 function renderBar(){
   const ids = Object.keys(cart), n = ids.length, t = cartTotal();
   $('bar-n').textContent = n;
@@ -482,27 +482,15 @@ function cartLinesHtml(){
       <button data-rm="${esc(pid)}" style="width:auto; border:0; text-decoration:underline; font-size:12px; color:var(--chalk-dim); margin-left:6px;">retirer</button></div></div>
       <div class="p">${lineInfo(pid, g).promo ? `<s style="font-size:11px; opacity:.6;">${eur(lineInfo(pid, g).base)}</s><br>` : ''}${eur(linePrice(pid, g))}<small>${lineInfo(pid, g).promo ? '🔥 ' + esc(lineInfo(pid, g).promo) : eurShort(rate(pid, g)) + '/g'}</small></div></div>`; }).join('');
 }
+// Un seul panier et une seule validation pour tout le site : on termine la commande sur la page principale
 function openCheckout(){
-  const loggedIn = !!(user && profile);
-  openSheet(`<h3>Ta commande</h3>
+  openSheet(`<h3>Ton panier</h3>
     <div id="c-lines">${cartLinesHtml()}</div>
     <div class="c-total">Total <b id="c-total">${eur(cartTotal())}</b></div>
-    <form id="c-form" autocomplete="on">
-      <div class="field"><label for="c-name">Prénom</label><input id="c-name" required autocomplete="given-name" value="${esc(profile ? profile.name || '' : '')}"></div>
-      <div class="field"><label for="c-phone">Téléphone</label><input id="c-phone" type="tel" required autocomplete="tel" placeholder="06 XX XX XX XX" value="${esc(profile && profile.phone || '')}"></div>
-      <div class="field"><label for="c-addr">Adresse (Haute-Loire)</label><input id="c-addr" required autocomplete="street-address" placeholder="N°, rue, ville"></div>
-      <div class="field"><label for="c-cp">Code postal (43…)</label><input id="c-cp" required inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="43000"></div>
-      <div class="field"><label for="c-notes">Notes (optionnel)</label><textarea id="c-notes" rows="2" placeholder="Créneau préféré, précisions…"></textarea></div>
-      <div class="field"><label>Paiement</label><div class="opts"><label class="opt"><input type="radio" name="c-pay" checked> Paiement à la livraison (espèces ou carte)</label></div></div>
-      <div class="field" id="c-rw-box" hidden><label>Mes points fidélité : <b class="mono" style="color:var(--lime);">${profile ? profile.points : 0}</b> pts</label><div class="opts" id="c-rw"></div></div>
-      <p class="earn" id="c-earn"></p>
-      <button class="btn btn-lime" type="submit" style="width:100%;" id="c-ok">Valider la commande</button>
-      <p class="msg" id="c-msg"></p>
-      ${loggedIn ? '' : '<p style="font-size:13px; color:var(--chalk-soft); text-align:center; margin-top:4px;">Déjà un compte fidélité ? <button type="button" class="linkbtn" id="c-login">Se connecter</button></p>'}
-    </form>`);
-  bindCartLines(); renderRewards();
-  if($('c-login')) $('c-login').addEventListener('click', openLogin);
-  $('c-form').addEventListener('submit', submitOrder);
+    <p style="font-size:13px; color:var(--chalk-soft); margin:6px 0 14px;">C'est le même panier que sur le site. Choisis ensuite la livraison locale ou l'expédition, puis valide.</p>
+    <button class="btn btn-lime" type="button" style="width:100%;" id="c-ok" ${Object.keys(cart).length ? '' : 'disabled'}>Choisir la livraison et valider →</button>`);
+  bindCartLines();
+  $('c-ok').addEventListener('click', () => { saveCart(); location.href = '/?panier=1'; });
 }
 function bindCartLines(){
   $('c-lines').onclick = (e) => {
@@ -511,7 +499,7 @@ function bindCartLines(){
     if(t.dataset.inc) cart[pid] = Math.round((cart[pid] + 1) * 100) / 100;
     if(t.dataset.dec) cart[pid] = Math.max(1, Math.round((cart[pid] - 1) * 100) / 100);
     if(t.dataset.rm) delete cart[pid];
-    saveCart(); renderBar(); $('c-lines').innerHTML = cartLinesHtml(); $('c-total').textContent = eur(cartTotal()); renderRewards();
+    saveCart(); renderBar(); $('c-lines').innerHTML = cartLinesHtml(); $('c-total').textContent = eur(cartTotal()); if($('c-earn')) renderRewards();
     if(!Object.keys(cart).length) $('c-ok').disabled = true;
   };
 }
@@ -563,7 +551,7 @@ async function submitOrder(e){
     msg.textContent = err && err.message && !/fetch/i.test(err.message) ? err.message : 'Erreur, réessaie dans un instant.';
   }
 }
-$('bar-order').addEventListener('click', openCheckout);
+$('bar-order').addEventListener('click', () => { if(!Object.keys(cart).length) return; saveCart(); location.href = '/?panier=1'; });
 $('bar-cart').addEventListener('click', openCheckout);
 
 /* ---------- recommander comme la dernière fois ---------- */
