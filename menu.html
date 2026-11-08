@@ -291,7 +291,7 @@ const gfmt = (n) => String(Math.round(n * 100) / 100).replace('.', ',') + ' g';
 /* ---------- produits & prix ---------- */
 function prod(pid){
   const base = PRODUCTS[pid], m = menu[pid] || {};
-  if(!base && !(m.prix_1g > 0)) return null;
+  if(!base && !(m.prix_1g > 0) && !(Array.isArray(m.prix_paliers) && m.prix_paliers.length)) return null;
   return {
     id: pid, name: m.nom || (base && base.name) || pid, cat: m.categorie || (base && base.cat) || 'fleur',
     // grille de prix de la base (la même que celle utilisée par le serveur) en priorité
