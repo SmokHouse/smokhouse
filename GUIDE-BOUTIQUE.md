@@ -220,6 +220,37 @@ Un changement s'applique tout de suite partout.
 
 ---
 
+## Promos et remises
+
+**Promos automatiques** : admin → **Stock** → **🏷 Promos** → **+ Nouvelle promo**. Deux types :
+- **« X g pour Y € »** : par exemple 10 g pour 90 €. Le prix au gramme du lot s'applique dès 10 g.
+- **« -X % »** : par exemple -10 % sur les fleurs dès 5 g.
+
+Une promo peut viser un produit, toutes les fleurs, toutes les résines ou tout le catalogue. Tu peux lui mettre des dates de début et de fin.
+
+Elle s'affiche toute seule sur les cartes du site et sur le menu. Le **serveur** l'applique au moment de la commande et l'indique sur la facture. Si plusieurs promos s'appliquent, le client a la meilleure.
+
+**Remise à la main sur une commande** :
+- Bouton **💸 Faire une remise** sur la commande, avant la livraison (local) ou avant le paiement (France).
+- Tu indiques le **nouveau total**, par exemple 90 € au lieu de 100 €, et un motif si tu veux.
+- La remise apparaît sur la facture (« Remise commerciale »). Les points fidélité sont calculés sur le montant réellement payé.
+- Pour annuler une remise, remets le total d'origine.
+
+---
+
+## Photos des variétés
+
+À faire une seule fois : lance **`photos-setup.sql`** dans Supabase.
+
+Ensuite, pour changer une photo :
+1. Admin → **Stock**.
+2. Touche la **vignette 📷** à gauche du nom de la variété.
+3. **Prendre / choisir une photo**, puis **Enregistrer**.
+
+La photo est réduite automatiquement et s'affiche aussitôt sur le site, la fiche produit et le menu. Le bouton **Retirer** remet la photo par défaut.
+
+---
+
 ## À prévoir avant d'ouvrir l'expédition (vente à distance)
 
 Vendre en ligne à toute la France fait de toi un vendeur à distance. Ces points sont à vérifier avec un professionnel (ceci n’est pas un avis juridique) :
