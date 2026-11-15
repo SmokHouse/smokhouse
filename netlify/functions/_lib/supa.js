@@ -70,4 +70,12 @@ async function getInvoiceForOrder(id){
   return rows.find(f => !annulees.has(f.numero)) || null;
 }
 
-module.exports = { rest, rpc, getUser, isAdmin, getOrder, getInvoiceForOrder, DbError, BASE };
+// Envoi d'un fichier dans le stockage Supabase (bucket public) → adresse publique
+async function uploadPublic(bucket, path, buffer, contentType){
+  const h = headers({ 'Content-Type': contentType || 'application/octet-stream', 'x-upsert': 'true', 'cache-control': '31536000' });
+  const res = await fetch(BASE + '/storage/v1/object/' + bucket + '/' + path, { method: 'POST', headers: h, body: buffer });
+  if(!res.ok) throw new DbError('STOCKAGE_' + res.status + ' ' + (await res.text()).slice(0, 200), res.status);
+  return BASE + '/storage/v1/object/public/' + bucket + '/' + path;
+}
+
+module.exports = { rest, rpc, getUser, isAdmin, getOrder, getInvoiceForOrder, uploadPublic, DbError, BASE };
