@@ -251,6 +251,24 @@ La photo est réduite automatiquement et s'affiche aussitôt sur le site, la fic
 
 ---
 
+## ✨ Studio IA (images au style de la marque)
+
+**Installation (une fois)**
+1. Va sur **platform.openai.com**, crée un compte, puis :
+   - **Billing** : ajoute une carte et mets 5 à 10 € de crédit ;
+   - **API keys** : crée une clé.
+2. Dans Netlify, ajoute la variable **`OPENAI_API_KEY`** (cochée secrète), puis redéploie.
+3. Dans Supabase, lance **`ia-setup.sql`**.
+4. Si OpenAI demande de « vérifier l'organisation », fais-le dans **Settings → Organization**.
+
+**Utilisation**
+- Admin → **Stock** → **✨ IA**. Ou touche la vignette 📷 d'une variété → **Créer une photo avec l'IA**.
+- Décris l'image, puis choisis le style (Smok'House, studio noir, nature) et le format (paysage pour le site, carré pour Insta, portrait pour les stories).
+- **Partir de ma photo** : l'IA garde ton vrai produit et refait le décor et la lumière. C'est le mieux pour les photos de la boutique.
+- Une image coûte environ 5 centimes (qualité standard) ou 20 centimes (haute). Une limite de 30 images par 24 h évite les mauvaises surprises : tu peux la changer avec la variable `IA_LIMITE_JOUR`.
+
+---
+
 ## À prévoir avant d'ouvrir l'expédition (vente à distance)
 
 Vendre en ligne à toute la France fait de toi un vendeur à distance. Ces points sont à vérifier avec un professionnel (ceci n’est pas un avis juridique) :
