@@ -93,6 +93,11 @@
   .seg button.active{background:var(--surface-2); color:var(--fg);}
   .st-photo{flex:none; width:58px; height:58px; border-radius:12px; border:1px solid var(--line); background:#000 center/cover no-repeat; position:relative; padding:0;}
   .st-photo span{position:absolute; right:-6px; bottom:-6px; width:24px; height:24px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line); font-size:12px; display:flex; align-items:center; justify-content:center;}
+  .ia-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:12px;}
+  .ia-grid button{aspect-ratio:1; border-radius:10px; border:1px solid var(--line); background:#000 center/cover no-repeat; padding:0;}
+  .ia-wait{display:flex; align-items:center; gap:12px; padding:18px; border:1px dashed var(--line); border-radius:14px; margin-bottom:12px;}
+  .ia-spin{width:26px; height:26px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--moss); animation:iaspin 1s linear infinite; flex:none;}
+  @keyframes iaspin{to{transform:rotate(360deg);}}
   .ph-prev{width:100%; aspect-ratio:2.05/1; border-radius:14px; background:#000 center/cover no-repeat; border:1px solid var(--line); margin-bottom:12px;}
   .seg button .n{font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--surface-2); border-radius:10px; padding:1px 7px; margin-left:4px;}
   .seg button.active .n{background:var(--moss); color:#0E1207;}
@@ -236,7 +241,7 @@
 
     <!-- STOCK -->
     <section data-view="stock" hidden>
-      <div class="row"><h2>Stock</h2><div class="row" style="gap:8px;"><button class="btn ghost" id="edit-promos">🏷 Promos</button><button class="btn ghost" id="edit-sheets">📋 Fiches</button><button class="btn ghost" id="edit-menu">🗒 Menu</button><button class="btn primary" id="add-variety">+ Variété</button></div></div>
+      <div class="row" style="flex-wrap:wrap; gap:8px;"><h2>Stock</h2><div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;"><button class="btn ghost" id="ia-studio">✨ IA</button><button class="btn ghost" id="edit-promos">🏷 Promos</button><button class="btn ghost" id="edit-sheets">📋 Fiches</button><button class="btn ghost" id="edit-menu">🗒 Menu</button><button class="btn primary" id="add-variety">+ Variété</button></div></div>
       <p class="muted" id="stock-value" style="margin:-4px 0 10px;"></p>
       <div id="stock-list"></div>
       <div class="label">Derniers mouvements</div>
@@ -705,12 +710,14 @@ function photoSheet(p){
     <div class="ph-prev" id="ph-prev" style="background-image:url('${esc(photoOf(p.id))}')"></div>
     <p class="muted" style="margin-bottom:12px;">${has ? 'Photo actuelle.' : 'Photo par défaut (aucune photo envoyée).'} Elle s'affiche sur la carte du site, la fiche produit et le menu. Format paysage conseillé.</p>
     <label class="btn grow" style="display:flex; justify-content:center; cursor:pointer; margin-bottom:10px;">📷 Prendre / choisir une photo<input type="file" id="ph-file" accept="image/*" hidden></label>
+    <button class="btn ghost" id="ph-ia" style="width:100%; margin-bottom:10px;">✨ Créer une photo avec l'IA</button>
     <div class="actions">${has ? '<button class="btn danger" id="ph-del">Retirer</button>' : ''}<button class="btn ghost" onclick="closeSheet()">Annuler</button><button class="btn primary grow" id="ph-ok" disabled>Enregistrer</button></div>`);
   $('ph-file').addEventListener('change', async (e) => {
     const f = e.target.files && e.target.files[0]; if(!f) return;
     try{ blob = await shrinkImage(f); $('ph-prev').style.backgroundImage = 'url(' + URL.createObjectURL(blob) + ')'; $('ph-ok').disabled = false; }
     catch(err){ toast('Photo illisible, essaie une autre (JPEG ou PNG)', true); }
   });
+  $('ph-ia').addEventListener('click', () => iaStudio({ product_id: p.id }));
   const save = async (url) => {
     const r = sheets[p.id] || {};
     const { error } = await sb.from('menu_produits').upsert({ product_id: p.id, nom: r.nom || p.name, categorie: r.categorie || (p.category === 'resine' ? 'resine' : 'fleur'), photo_url: url, updated_at: new Date().toISOString() }, { onConflict: 'product_id' });
@@ -737,6 +744,93 @@ function photoSheet(p){
       const m = /\/produits\/(.+)$/.exec(old || ''); if(m) sb.storage.from('produits').remove([decodeURIComponent(m[1])]).catch(() => {}); }
   });
 }
+
+
+/* ---------- ✨ Studio IA : créer des images au style de la marque (OpenAI, via le serveur) ---------- */
+const IA_STYLES = { smokhouse: '🌿 Style Smok\'House (comptoir sombre, néon)', studio: '⬛ Fond studio noir', nature: '🍃 Ambiance naturelle' };
+const IA_FORMATS = { paysage: 'Paysage (cartes du site)', carre: 'Carré (Insta)', portrait: 'Portrait (story)' };
+function iaSubject(pid){
+  const r = sheets[pid] || {}, p = products.find(x => x.id === pid) || {};
+  const res = (r.categorie || p.category) === 'resine';
+  return (r.nom || p.name || pname(pid)) + ' — ' + (res ? 'un morceau de résine de CBD (hash) doré et brillant' : 'une belle tête de fleur de CBD dense, avec trichomes visibles') + (r.aromes ? ', notes ' + r.aromes : '');
+}
+async function iaStudio(opt){
+  opt = opt || {};
+  const { data: hist, error } = await sb.from('ia_images').select('*').eq('status', 'done').order('created_at', { ascending: false }).limit(9);
+  if(error){ toast('Lance d\'abord ia-setup.sql dans Supabase', true); return; }
+  const ids = [...new Set([...products.map(x => x.id), ...Object.keys(sheets)])];
+  let ref = null, style = 'smokhouse', format = 'paysage';
+  openSheet(`<h3>✨ Studio IA</h3>
+    <p class="muted" style="margin-bottom:12px;">Décris l'image : l'IA la crée au style de ta marque. Pour une photo de produit fidèle, pars de <b>ta vraie photo</b> : l'IA garde le produit et refait le décor et la lumière.</p>
+    <div class="field"><label>Pour</label><select id="ia-pid"><option value="">Image libre (Insta, promo, affiche…)</option>${ids.map(id => `<option value="${esc(id)}" ${opt.product_id === id ? 'selected' : ''}>${esc(pname(id))}</option>`).join('')}</select></div>
+    <div class="field"><label>Ce que tu veux voir</label><textarea id="ia-prompt" rows="3" placeholder="ex : une tête d'OG Kush posée sur le comptoir à côté d'une tasse de café">${esc(opt.product_id ? iaSubject(opt.product_id) : '')}</textarea></div>
+    <div class="field"><label>Style</label><div class="chips" id="ia-style">${Object.entries(IA_STYLES).map(([k, l]) => `<button type="button" class="chip ${k === style ? 'on' : ''}" data-v="${k}">${l}</button>`).join('')}</div></div>
+    <div class="field"><label>Format</label><div class="chips" id="ia-format">${Object.entries(IA_FORMATS).map(([k, l]) => `<button type="button" class="chip ${k === format ? 'on' : ''}" data-v="${k}">${l}</button>`).join('')}</div></div>
+    <div class="field"><label>Qualité</label><div class="chips" id="ia-q"><button type="button" class="chip on" data-v="medium">Standard (~5 cts)</button><button type="button" class="chip" data-v="high">Haute (~20 cts)</button></div></div>
+    <label class="btn ghost" style="display:flex; justify-content:center; cursor:pointer; margin-bottom:6px;" id="ia-ref-lbl">📷 Partir de ma photo (optionnel)<input type="file" id="ia-ref" accept="image/*" hidden></label>
+    <div class="ph-prev" id="ia-ref-prev" hidden></div>
+    <div id="ia-out"></div>
+    <div class="actions" style="margin-bottom:14px;"><button class="btn ghost" onclick="closeSheet()">Fermer</button><button class="btn primary grow" id="ia-go">✨ Créer l'image</button></div>
+    ${hist && hist.length ? `<div class="label" style="margin-top:0;">Dernières créations</div><div class="ia-grid" id="ia-hist">${hist.map(h => `<button style="background-image:url('${esc(h.url)}')" data-id="${h.id}" aria-label="Voir"></button>`).join('')}</div>` : ''}`);
+  const chips = (id, set) => $(id).addEventListener('click', (e) => { const c = e.target.closest('.chip'); if(!c) return; document.querySelectorAll('#' + id + ' .chip').forEach(x => x.classList.toggle('on', x === c)); set(c.dataset.v); });
+  chips('ia-style', v => style = v); chips('ia-format', v => format = v);
+  $('ia-pid').addEventListener('change', () => { const v = $('ia-pid').value; if(v) $('ia-prompt').value = iaSubject(v); });
+  $('ia-ref').addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    try{ ref = await shrinkImage(f); $('ia-ref-prev').style.backgroundImage = 'url(' + URL.createObjectURL(ref) + ')'; $('ia-ref-prev').hidden = false; $('ia-ref-lbl').firstChild.textContent = '📷 Changer la photo de départ'; }
+    catch(err){ toast('Photo illisible', true); }
+  });
+  if($('ia-hist')) $('ia-hist').addEventListener('click', (e) => { const b = e.target.closest('[data-id]'); if(!b) return; iaShow(hist.find(h => h.id === b.dataset.id)); });
+  $('ia-go').addEventListener('click', async () => {
+    const prompt = $('ia-prompt').value.trim(); if(prompt.length < 5){ toast('Décris l\'image en quelques mots', true); return; }
+    const go = $('ia-go'); go.disabled = true;
+    let ref_url = null;
+    if(ref){
+      const path = 'ia/ref-' + Date.now() + '.jpg';
+      const up = await sb.storage.from('produits').upload(path, ref, { contentType: 'image/jpeg', upsert: true });
+      if(up.error){ go.disabled = false; toast('Envoi de la photo impossible (lance photos-setup.sql ?)', true); return; }
+      ref_url = sb.storage.from('produits').getPublicUrl(path).data.publicUrl;
+    }
+    const row = { product_id: $('ia-pid').value || null, prompt, style, format, qualite: document.querySelector('#ia-q .chip.on').dataset.v, ref_url };
+    const ins = await sb.from('ia_images').insert(row).select('*').single();
+    if(ins.error){ go.disabled = false; toast('Erreur : ' + errTxt(ins.error.message), true); return; }
+    $('ia-out').innerHTML = '<div class="ia-wait"><div class="ia-spin"></div><div><b>Création en cours…</b><div class="muted">20 à 60 secondes. Tu peux fermer, l\'image sera dans « Dernières créations ».</div></div></div>';
+    const { data:{ session } } = await sb.auth.getSession();
+    fetch('/.netlify/functions/ia-image-background', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ id: ins.data.id }) })
+      .then(r => { if(r.status === 404) throw new Error('fn'); }).catch(() => { $('ia-out').innerHTML = '<div class="warn-box">Fonction IA introuvable : renvoie les fichiers sur GitHub (dossier netlify).</div>'; go.disabled = false; });
+    const t0 = Date.now();
+    const poll = async () => {
+      if(!$('ia-out')) return;                         // feuille fermée
+      const r = await sb.from('ia_images').select('*').eq('id', ins.data.id).single();
+      const x = r.data;
+      if(x && x.status === 'done') return iaShow(x);
+      if(x && x.status === 'error'){ $('ia-out').innerHTML = '<div class="warn-box">' + esc(x.erreur || 'Erreur') + '</div>'; go.disabled = false; return; }
+      if(Date.now() - t0 > 180000){ $('ia-out').innerHTML = '<div class="warn-box">Ça prend plus de 3 min : regarde dans « Dernières créations » un peu plus tard.</div>'; go.disabled = false; return; }
+      setTimeout(poll, 3000);
+    };
+    setTimeout(poll, 4000);
+  });
+}
+function iaShow(x){
+  const pid = x.product_id;
+  openSheet(`<h3>✨ Image créée</h3>
+    <img src="${esc(x.url)}" alt="" style="width:100%; border-radius:14px; border:1px solid var(--line); margin-bottom:10px;">
+    <p class="muted" style="margin-bottom:12px;">${esc(x.prompt)}</p>
+    ${pid ? `<button class="btn primary" style="width:100%; margin-bottom:8px;" id="ia-use">Utiliser comme photo de ${esc(pname(pid))}</button>` : ''}
+    <div class="field"><label>${pid ? 'Ou pour une autre variété' : 'Utiliser comme photo de'}</label><select id="ia-other"><option value="">—</option>${[...new Set([...products.map(p => p.id), ...Object.keys(sheets)])].map(id => `<option value="${esc(id)}">${esc(pname(id))}</option>`).join('')}</select></div>
+    <div class="actions"><a class="btn ghost grow" href="${esc(x.url)}" download target="_blank" rel="noopener">⬇️ Télécharger</a><button class="btn ghost grow" id="ia-again">🔁 Une autre</button></div>
+    <p class="muted" style="margin-top:10px;">Image d'illustration : sur la boutique, montre de préférence le vrai produit (pars de ta photo) pour que le client reçoive ce qu'il voit.</p>`);
+  const use = async (id) => {
+    const r = sheets[id] || {}, p = products.find(y => y.id === id) || {};
+    const { error } = await sb.from('menu_produits').upsert({ product_id: id, nom: r.nom || p.name || pname(id), categorie: r.categorie || (p.category === 'resine' ? 'resine' : 'fleur'), photo_url: x.url, updated_at: new Date().toISOString() }, { onConflict: 'product_id' });
+    if(error){ toast('Erreur : ' + errTxt(error.message), true); return; }
+    await loadSheets(); renderStock(); closeSheet(); toast('Photo de ' + pname(id) + ' mise à jour ✓');
+  };
+  if($('ia-use')) $('ia-use').addEventListener('click', () => use(pid));
+  $('ia-other').addEventListener('change', () => { const v = $('ia-other').value; if(v) use(v); });
+  $('ia-again').addEventListener('click', () => iaStudio({ product_id: pid }));
+}
+$('ia-studio').addEventListener('click', () => iaStudio());
 
 /* ---------- remise à la main sur une commande (avant livraison / paiement) ---------- */
 function discountSheet(o){
