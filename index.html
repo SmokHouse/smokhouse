@@ -2281,6 +2281,9 @@
       SHOP.sheets[r.product_id] = r;
       var btn = document.querySelector('.cart-add-btn[data-product="' + r.product_id + '"]');
       var card = btn && btn.closest('.card');
+      // Variété décochée « Visible » dans l'admin (🗒 Menu) : on la cache aussi sur le site
+      if(card){ card.style.display = r.visible === false ? 'none' : ''; }
+      if(r.visible === false && cart[r.product_id]){ delete cart[r.product_id]; }
       if(card && r.photo_url){ var phd = card.querySelector('.pc-ph'); if(phd) phd.style.backgroundImage = 'url("' + String(r.photo_url).replace(/"/g, '') + '")'; }
       if(Array.isArray(r.prix_paliers) && r.prix_paliers.length && PRODUCTS[r.product_id]){
         var t = r.prix_paliers.map(function(x){ return [Number(x[0]), Number(x[1])]; }).sort(function(a, b){ return a[0] - b[0]; });
